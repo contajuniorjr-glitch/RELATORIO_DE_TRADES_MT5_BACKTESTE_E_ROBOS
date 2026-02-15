@@ -1,0 +1,10 @@
+{
+  "tv_entry_line_color": "#4169E1",
+  "tv_stop_line_color": "#DC143C",
+  "tv_exit_line_color": "#2E8B57",
+  "tv_marker_color": "#E2E8F0",
+  "tv_bg_color": "#0B1220",
+  "tv_dark_theme": true,
+  "tv_watermark_color": "#E2E8F0",
+  "tv_watermark_opacity": 0.6
+}
