@@ -1340,6 +1340,86 @@ def _inject_dashboard_styles() -> None:
                     inset 0 0 6px rgba(0, 212, 255, 0.12);
             }
         }
+
+        .jt-logo-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.64rem;
+            margin: 0.1rem auto 0.45rem auto;
+            padding: 0.45rem 0.72rem 0.45rem 0.48rem;
+            border-radius: 14px;
+            border: 1px solid rgba(130, 240, 255, 0.40);
+            background: linear-gradient(120deg, rgba(0, 212, 255, 0.12), rgba(0, 240, 164, 0.07));
+            box-shadow:
+                0 0 8px rgba(0, 212, 255, 0.16),
+                inset 0 0 8px rgba(0, 212, 255, 0.10);
+        }
+
+        .jt-logo-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.03em;
+            color: #ECF8FF;
+            border: 1px solid rgba(130, 240, 255, 0.62);
+            background:
+                radial-gradient(62% 62% at 28% 24%, rgba(255, 255, 255, 0.28), transparent 72%),
+                linear-gradient(135deg, rgba(0, 212, 255, 0.65), rgba(0, 240, 164, 0.45));
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.24),
+                inset 0 0 7px rgba(255, 255, 255, 0.10);
+        }
+
+        .jt-logo-text {
+            display: inline-flex;
+            flex-direction: column;
+            line-height: 1.06;
+            text-align: left;
+        }
+
+        .jt-logo-title {
+            font-family: var(--font-head);
+            font-size: 1.24rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #EAF5FF;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.18);
+        }
+
+        .jt-logo-sub {
+            margin-top: 0.10rem;
+            font-family: var(--font-body);
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #9EB9DB;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 680px) {
+            .jt-logo-wrap {
+                gap: 0.5rem;
+                padding: 0.42rem 0.6rem 0.42rem 0.45rem;
+            }
+            .jt-logo-mark {
+                width: 36px;
+                height: 36px;
+                font-size: 0.84rem;
+            }
+            .jt-logo-title {
+                font-size: 1.04rem;
+            }
+            .jt-logo-sub {
+                font-size: 0.58rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1398,9 +1478,26 @@ def _centered_heading(text: str, level: int = 2) -> None:
         unsafe_allow_html=True,
     )
 
+def _render_junior_trades_logo() -> None:
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; width:100%;">
+            <div class="jt-logo-wrap" aria-label="Junior Trades">
+                <div class="jt-logo-mark">JT</div>
+                <div class="jt-logo-text">
+                    <span class="jt-logo-title">Junior Trades</span>
+                    <span class="jt-logo-sub">Relatório de Performance</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 _inject_dashboard_styles()
 _init_session_defaults()
 _centered_heading("Relatório Pós-Trade — MT5/CSV", level=1)
+_render_junior_trades_logo()
 st.caption("Completo: timezone fix, setups do robô, MT5 via MAGIC, custos B3 auto, candles com entrada/saída, stop inicial do CSV, tabelas formatadas, leaderboards e exportações.")
 
 # --------- Sidebar (parte 1): fonte e custos + botão carregar ---------
