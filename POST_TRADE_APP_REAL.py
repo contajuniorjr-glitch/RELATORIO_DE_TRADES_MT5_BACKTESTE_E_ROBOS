@@ -1342,82 +1342,110 @@ def _inject_dashboard_styles() -> None:
         }
 
         .jt-logo-wrap {
+            position: relative;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 0.64rem;
-            margin: 0.1rem auto 0.45rem auto;
-            padding: 0.45rem 0.72rem 0.45rem 0.48rem;
-            border-radius: 14px;
-            border: 1px solid rgba(130, 240, 255, 0.40);
-            background: linear-gradient(120deg, rgba(0, 212, 255, 0.12), rgba(0, 240, 164, 0.07));
+            gap: 0.62rem;
+            margin: 0.08rem auto 0.50rem auto;
+            padding: 0.36rem 0.84rem 0.38rem 0.40rem;
+            border-radius: 12px;
+            border: 1px solid rgba(136, 207, 242, 0.38);
+            background: linear-gradient(165deg, rgba(8, 17, 31, 0.95), rgba(7, 15, 27, 0.93));
             box-shadow:
-                0 0 8px rgba(0, 212, 255, 0.16),
-                inset 0 0 8px rgba(0, 212, 255, 0.10);
+                0 8px 22px rgba(1, 8, 19, 0.32),
+                inset 0 0 0 1px rgba(203, 232, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .jt-logo-wrap::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(92, 201, 255, 0.75), rgba(92, 201, 255, 0.0));
+            pointer-events: none;
         }
 
         .jt-logo-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 11px;
+            position: relative;
+            z-index: 1;
+            width: 35px;
+            height: 35px;
+            min-width: 35px;
+            border-radius: 9px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-family: var(--font-body);
+            font-size: 0.78rem;
             font-weight: 800;
-            font-size: 0.95rem;
-            letter-spacing: 0.03em;
-            color: #ECF8FF;
-            border: 1px solid rgba(130, 240, 255, 0.62);
-            background:
-                radial-gradient(62% 62% at 28% 24%, rgba(255, 255, 255, 0.28), transparent 72%),
-                linear-gradient(135deg, rgba(0, 212, 255, 0.65), rgba(0, 240, 164, 0.45));
-            box-shadow:
-                0 0 10px rgba(0, 212, 255, 0.24),
-                inset 0 0 7px rgba(255, 255, 255, 0.10);
+            letter-spacing: 0.06em;
+            color: #EAF4FF;
+            border: 1px solid rgba(146, 219, 255, 0.56);
+            background: linear-gradient(145deg, rgba(20, 105, 149, 0.96), rgba(20, 79, 133, 0.96));
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.08);
         }
 
         .jt-logo-text {
+            position: relative;
+            z-index: 1;
             display: inline-flex;
             flex-direction: column;
-            line-height: 1.06;
+            line-height: 1.03;
             text-align: left;
         }
 
-        .jt-logo-title {
-            font-family: var(--font-head);
-            font-size: 1.24rem;
+        .jt-logo-kicker {
+            font-family: var(--font-body);
+            font-size: 0.48rem;
             font-weight: 700;
-            letter-spacing: 0.03em;
-            color: #EAF5FF;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.18);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #87A8CC;
+        }
+
+        .jt-logo-title {
+            margin-top: 0.03rem;
+            font-family: var(--font-head);
+            font-size: 1.12rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: #EEF6FF;
         }
 
         .jt-logo-sub {
             margin-top: 0.10rem;
             font-family: var(--font-body);
-            font-size: 0.66rem;
+            font-size: 0.54rem;
             font-weight: 700;
-            letter-spacing: 0.12em;
-            color: #9EB9DB;
+            letter-spacing: 0.14em;
+            color: #A5BEDA;
             text-transform: uppercase;
         }
 
         @media (max-width: 680px) {
             .jt-logo-wrap {
-                gap: 0.5rem;
-                padding: 0.42rem 0.6rem 0.42rem 0.45rem;
+                gap: 0.50rem;
+                padding: 0.30rem 0.62rem 0.32rem 0.34rem;
             }
             .jt-logo-mark {
-                width: 36px;
-                height: 36px;
-                font-size: 0.84rem;
+                width: 31px;
+                height: 31px;
+                min-width: 31px;
+                font-size: 0.70rem;
+            }
+            .jt-logo-kicker {
+                font-size: 0.44rem;
+                letter-spacing: 0.15em;
             }
             .jt-logo-title {
-                font-size: 1.04rem;
+                font-size: 0.94rem;
             }
             .jt-logo-sub {
-                font-size: 0.58rem;
+                font-size: 0.49rem;
+                letter-spacing: 0.12em;
             }
         }
         </style>
@@ -1483,8 +1511,9 @@ def _render_junior_trades_logo() -> None:
         """
         <div style="display:flex; justify-content:center; width:100%;">
             <div class="jt-logo-wrap" aria-label="Junior Trades">
-                <div class="jt-logo-mark">JT</div>
+                <div class="jt-logo-mark" aria-hidden="true">JT</div>
                 <div class="jt-logo-text">
+                    <span class="jt-logo-kicker">Trading Lab</span>
                     <span class="jt-logo-title">Junior Trades</span>
                     <span class="jt-logo-sub">Relatório de Performance</span>
                 </div>
@@ -2153,6 +2182,23 @@ def _compensation_diagnosis(
     color = "#22C55E"
     return status, color, reasons, alerts
 
+def _compensation_explanation(status: str, reasons: list[str], alerts: list[str]) -> str:
+    if status == "Não compensa":
+        if alerts:
+            return alerts[0]
+        if reasons:
+            return reasons[0]
+        return "O retorno líquido e a expectativa por trade ainda não sustentam o risco e os custos."
+    if status == "Compensa com ressalvas":
+        if alerts:
+            return alerts[0]
+        if reasons:
+            return reasons[0]
+        return "Há edge, mas com fragilidades de risco/custos que pedem ajuste."
+    if reasons:
+        return reasons[0]
+    return "Retorno, eficiência e risco estão equilibrados em nível operacional saudável."
+
 def _render_pillar_chip(title: str, score: float, detail: str) -> None:
     label, color = _score_band(score)
     score_10 = _safe_num(score) / 10.0
@@ -2273,6 +2319,7 @@ comp_status, comp_color, comp_reasons, comp_alerts = _compensation_diagnosis(
     cost_ratio_v=cost_ratio,
     pct_meses_pos_v=pct_meses_pos,
 )
+comp_why = _compensation_explanation(comp_status, comp_reasons, comp_alerts)
 
 qual_entry_base = _qual_band(payoff, 2.0, 1.4)
 qual_stability_base = _qual_band(win_rate, 0.58, 0.47)
@@ -2361,6 +2408,9 @@ with tab_diag:
                     border-radius:12px; padding:10px 12px; background:rgba(15,23,42,0.55);">
             <div style="font-size:0.78rem; color:#A7B7D1; letter-spacing:0.03em;">DECISÃO DE COMPENSAÇÃO</div>
             <div style="font-size:1.25rem; font-weight:700; color:{comp_color};">{comp_status}</div>
+            <div style="font-size:0.86rem; color:#E2ECFB; margin-top:4px;">
+                <b>Por quê:</b> {comp_why}
+            </div>
             <div style="font-size:0.80rem; color:#C4D3E8; margin-top:3px;">
                 O diagnóstico considera compensações entre acerto, payoff, expectativa, drawdown e custos.
             </div>
