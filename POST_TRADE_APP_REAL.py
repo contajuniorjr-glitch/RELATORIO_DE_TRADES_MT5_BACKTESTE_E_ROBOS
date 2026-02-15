@@ -2462,6 +2462,7 @@ def _build_equity_curve_chart(
     x_col: str,
     x_type: str,
     x_title: str,
+    equity_baseline: float = 0.0,
     area_opacity: float = 0.16,
 ):
     def _interp(v0, v1, frac: float):
@@ -2470,17 +2471,29 @@ def _build_equity_curve_chart(
         except Exception:
             return v1
 
+    try:
+        baseline_value = float(equity_baseline)
+    except Exception:
+        baseline_value = 0.0
+    if not np.isfinite(baseline_value):
+        baseline_value = 0.0
+
     def _sign_label(curr: float, prev: float | None = None) -> str:
-        if curr > 0:
+        curr_rel = curr - baseline_value
+        if curr_rel > 0:
             return "Positivo"
-        if curr < 0:
+        if curr_rel < 0:
             return "Negativo"
         if prev is not None:
-            if prev > 0:
+            prev_rel = prev - baseline_value
+            if prev_rel > 0:
                 return "Positivo"
-            if prev < 0:
+            if prev_rel < 0:
                 return "Negativo"
         return "Positivo"
+
+    def _fmt_pct_or_nd(v: float) -> str:
+        return pct(v) if np.isfinite(v) else "n/d"
 
     if df.empty:
         return alt.Chart(pd.DataFrame(columns=[x_col, "Equity", "Data"]))
@@ -2491,6 +2504,38 @@ def _build_equity_curve_chart(
     work = work.sort_values(x_col, kind="mergesort").reset_index(drop=True)
     if work.empty:
         return alt.Chart(pd.DataFrame(columns=[x_col, "Equity", "Data"]))
+
+    eq_values = work["Equity"].astype(float).to_numpy()
+    first_equity = baseline_value
+    peak_idx = int(np.argmax(eq_values))
+    peak_value = float(eq_values[peak_idx])
+    peak_base = abs(first_equity)
+    peak_pct = ((peak_value - first_equity) / peak_base) if peak_base > 1e-9 else np.nan
+
+    running_peaks = np.empty_like(eq_values, dtype=float)
+    running_peak_idx = np.zeros(len(eq_values), dtype=int)
+    curr_peak = -np.inf
+    curr_peak_idx = 0
+    for i, val in enumerate(eq_values):
+        if val > curr_peak:
+            curr_peak = val
+            curr_peak_idx = i
+        running_peaks[i] = curr_peak
+        running_peak_idx[i] = curr_peak_idx
+
+    dd_values = running_peaks - eq_values
+    dd_trough_idx = int(np.argmax(dd_values))
+    dd_peak_idx = int(running_peak_idx[dd_trough_idx])
+    max_dd_value = float(dd_values[dd_trough_idx])
+    dd_peak_value = float(running_peaks[dd_trough_idx])
+    dd_pct = (max_dd_value / abs(dd_peak_value)) if abs(dd_peak_value) > 1e-9 else 0.0
+    dd_trough_value = float(eq_values[dd_trough_idx])
+
+    peak_label = f"Topo: {br_money(peak_value)} ({_fmt_pct_or_nd(peak_pct)})"
+    dd_label = f"Drawdown max: {br_money(-max_dd_value)} ({pct(-dd_pct)})"
+
+    def _row_data_value(i: int):
+        return work.iloc[i]["Data"] if "Data" in work.columns else work.iloc[i][x_col]
 
     records = []
     seg_id = 0
@@ -2516,18 +2561,20 @@ def _build_equity_curve_chart(
             prev_x, prev_y, prev_data = x_val, y_val, d_val
             continue
 
-        sign_changed = (prev_y > 0 and y_val < 0) or (prev_y < 0 and y_val > 0)
+        prev_rel = prev_y - baseline_value
+        curr_rel = y_val - baseline_value
+        sign_changed = (prev_rel > 0 and curr_rel < 0) or (prev_rel < 0 and curr_rel > 0)
         if sign_changed:
-            frac = abs(prev_y) / (abs(prev_y) + abs(y_val))
+            frac = abs(prev_rel) / (abs(prev_rel) + abs(curr_rel))
             x_zero = _interp(prev_x, x_val, frac)
             d_zero = _interp(prev_data, d_val, frac)
 
             records.append(
                 {
                     x_col: x_zero,
-                    "Equity": 0.0,
+                    "Equity": baseline_value,
                     "Data": d_zero,
-                    "Sinal": _sign_label(0.0, prev_y),
+                    "Sinal": _sign_label(baseline_value, prev_y),
                     "Segment": seg_id,
                 }
             )
@@ -2535,9 +2582,9 @@ def _build_equity_curve_chart(
             records.append(
                 {
                     x_col: x_zero,
-                    "Equity": 0.0,
+                    "Equity": baseline_value,
                     "Data": d_zero,
-                    "Sinal": _sign_label(0.0, y_val),
+                    "Sinal": _sign_label(baseline_value, y_val),
                     "Segment": seg_id,
                 }
             )
@@ -2556,9 +2603,33 @@ def _build_equity_curve_chart(
     plot_df = pd.DataFrame(records)
     plot_df["_ord"] = np.arange(len(plot_df))
 
-    base_curve = alt.Chart(plot_df).encode(
+    area_base = alt.Chart(plot_df).encode(
         x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        detail=alt.Detail("Segment:N"),
+        order=alt.Order("_ord:Q"),
+        tooltip=[
+            alt.Tooltip("Data:T", title="Data"),
+            alt.Tooltip("Equity:Q", title="Equity (R$)", format=",.2f"),
+        ],
+    )
+    area_pos = area_base.transform_filter(alt.datum.Sinal == "Positivo").mark_area(
+        opacity=area_opacity,
+        color=ALT_EQ_POS_COLOR,
+    ).encode(
         y=alt.Y("Equity:Q", title="Equity (R$)"),
+        y2=alt.value(baseline_value),
+    )
+    area_neg = area_base.transform_filter(alt.datum.Sinal == "Negativo").mark_area(
+        opacity=area_opacity,
+        color=ALT_EQ_NEG_COLOR,
+    ).encode(
+        y=alt.Y("Equity:Q", title="Equity (R$)"),
+        y2=alt.value(baseline_value),
+    )
+
+    line = alt.Chart(plot_df).mark_line(strokeWidth=2.6).encode(
+        x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        y=alt.Y("Equity:Q", title="Equity (R$)", stack=None),
         detail=alt.Detail("Segment:N"),
         order=alt.Order("_ord:Q"),
         color=alt.Color(
@@ -2574,9 +2645,106 @@ def _build_equity_curve_chart(
             alt.Tooltip("Equity:Q", title="Equity (R$)", format=",.2f"),
         ],
     )
-    area = base_curve.mark_area(opacity=area_opacity).encode(y2=alt.value(0))
-    line = base_curve.mark_line(strokeWidth=2.6)
-    return (area + line).interactive()
+
+    peak_df = pd.DataFrame(
+        [
+            {
+                x_col: work.iloc[peak_idx][x_col],
+                "Equity": peak_value,
+                "Data": _row_data_value(peak_idx),
+                "Label": peak_label,
+            }
+        ]
+    )
+    dd_df = pd.DataFrame(
+        [
+            {
+                x_col: work.iloc[dd_trough_idx][x_col],
+                "Equity": dd_trough_value,
+                "Data": _row_data_value(dd_trough_idx),
+                "Label": dd_label,
+            }
+        ]
+    )
+
+    peak_point = alt.Chart(peak_df).mark_point(size=90, filled=True, color=ALT_POS_COLOR).encode(
+        x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        y=alt.Y("Equity:Q", title="Equity (R$)"),
+        tooltip=[
+            alt.Tooltip("Data:T", title="Data"),
+            alt.Tooltip("Equity:Q", title="Topo (R$)", format=",.2f"),
+            alt.Tooltip("Label:N", title="Resumo"),
+        ],
+    )
+    peak_text = alt.Chart(peak_df).mark_text(
+        align="left",
+        baseline="bottom",
+        dx=8,
+        dy=-8,
+        color="#CFE0F7",
+        fontSize=12,
+        fontWeight=600,
+    ).encode(
+        x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        y=alt.Y("Equity:Q", title="Equity (R$)"),
+        text=alt.Text("Label:N"),
+    )
+
+    dd_point = alt.Chart(dd_df).mark_point(size=90, filled=True, color=ALT_NEG_COLOR).encode(
+        x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        y=alt.Y("Equity:Q", title="Equity (R$)"),
+        tooltip=[
+            alt.Tooltip("Data:T", title="Data"),
+            alt.Tooltip("Equity:Q", title="Fundo DD (R$)", format=",.2f"),
+            alt.Tooltip("Label:N", title="Resumo"),
+        ],
+    )
+    dd_text = alt.Chart(dd_df).mark_text(
+        align="left",
+        baseline="top",
+        dx=8,
+        dy=8,
+        color="#FFD3DA",
+        fontSize=12,
+        fontWeight=600,
+    ).encode(
+        x=alt.X(f"{x_col}:{x_type}", title=x_title),
+        y=alt.Y("Equity:Q", title="Equity (R$)"),
+        text=alt.Text("Label:N"),
+    )
+
+    chart = area_pos + area_neg + line + peak_point + peak_text + dd_point + dd_text
+
+    if max_dd_value > 0 and dd_peak_idx != dd_trough_idx:
+        dd_segment_df = pd.DataFrame(
+            [
+                {
+                    x_col: work.iloc[dd_peak_idx][x_col],
+                    "Equity": float(eq_values[dd_peak_idx]),
+                    "Data": _row_data_value(dd_peak_idx),
+                },
+                {
+                    x_col: work.iloc[dd_trough_idx][x_col],
+                    "Equity": dd_trough_value,
+                    "Data": _row_data_value(dd_trough_idx),
+                },
+            ]
+        )
+        dd_segment = alt.Chart(dd_segment_df).mark_line(
+            strokeWidth=1.9,
+            strokeDash=[7, 4],
+            color=ALT_NEG_COLOR,
+        ).encode(
+            x=alt.X(f"{x_col}:{x_type}", title=x_title),
+            y=alt.Y("Equity:Q", title="Equity (R$)"),
+            tooltip=[
+                alt.Tooltip("Data:T", title="Data"),
+                alt.Tooltip("Equity:Q", title="Equity (R$)", format=",.2f"),
+            ],
+        )
+        chart = chart + dd_segment
+
+    return chart.interactive()
 
 if "setup" in sim.columns and sim["setup"].astype(str).str.len().gt(0).any():
     base = sim.copy()
@@ -2677,7 +2845,7 @@ else:
 st.markdown("---")
 _centered_heading("Curvas Macro 📈", level=3)
 hide_gaps_macro = st.checkbox("Ocultar períodos sem trades (comprimir eixo X) — Curva Macro", value=False)
-st.caption("Curva de equity do robô ao longo do tempo. Verde claro = positivo e vermelho claro = negativo.")
+st.caption("Curva de equity do robô ao longo do tempo. Verde claro = acima do capital inicial e vermelho claro = abaixo do capital inicial.")
 
 eq_df = sim[["sort_time","equity"]].dropna().rename(columns={"sort_time":"Data","equity":"Equity"})
 if not eq_df.empty:
@@ -2689,6 +2857,7 @@ if not eq_df.empty:
             x_col="Idx",
             x_type="Q",
             x_title="Pontos da série (sem lacunas)",
+            equity_baseline=float(st.session_state.get("initial_capital", 0.0)),
             area_opacity=0.16,
         )
     else:
@@ -2697,6 +2866,7 @@ if not eq_df.empty:
             x_col="Data",
             x_type="T",
             x_title="Data",
+            equity_baseline=float(st.session_state.get("initial_capital", 0.0)),
             area_opacity=0.16,
         )
     st.altair_chart(_style_altair_chart(ch, height=320), use_container_width=True)
@@ -2871,6 +3041,7 @@ else:
                     x_col="Idx",
                     x_type="Q",
                     x_title="Pontos da série (sem lacunas)",
+                    equity_baseline=float(st.session_state.get("curve2_initial_capital", 0.0)),
                     area_opacity=0.15,
                 )
             else:
@@ -2879,6 +3050,7 @@ else:
                     x_col="Data",
                     x_type="T",
                     x_title="Data",
+                    equity_baseline=float(st.session_state.get("curve2_initial_capital", 0.0)),
                     area_opacity=0.15,
                 )
             st.altair_chart(_style_altair_chart(ch2, height=320), use_container_width=True)
