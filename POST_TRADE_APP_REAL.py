@@ -1343,28 +1343,28 @@ def _inject_dashboard_styles() -> None:
 
         @keyframes jtLogoNeonPulse {
             0% {
-                border-color: rgba(138, 221, 255, 0.44);
+                border-color: rgba(138, 221, 255, 0.56);
                 box-shadow:
-                    0 0 12px rgba(0, 212, 255, 0.20),
-                    0 0 28px rgba(0, 212, 255, 0.10),
+                    0 0 16px rgba(0, 212, 255, 0.28),
+                    0 0 36px rgba(0, 212, 255, 0.16),
                     0 12px 24px rgba(1, 8, 19, 0.34),
-                    inset 0 0 0 1px rgba(208, 235, 255, 0.06);
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.10);
             }
             50% {
-                border-color: rgba(176, 243, 255, 0.78);
+                border-color: rgba(176, 243, 255, 0.92);
                 box-shadow:
-                    0 0 18px rgba(0, 212, 255, 0.36),
-                    0 0 42px rgba(0, 212, 255, 0.20),
+                    0 0 26px rgba(0, 212, 255, 0.52),
+                    0 0 56px rgba(0, 212, 255, 0.34),
                     0 14px 26px rgba(1, 8, 19, 0.40),
-                    inset 0 0 0 1px rgba(220, 246, 255, 0.12);
+                    inset 0 0 0 1px rgba(220, 246, 255, 0.18);
             }
             100% {
-                border-color: rgba(138, 221, 255, 0.44);
+                border-color: rgba(138, 221, 255, 0.56);
                 box-shadow:
-                    0 0 12px rgba(0, 212, 255, 0.20),
-                    0 0 28px rgba(0, 212, 255, 0.10),
+                    0 0 16px rgba(0, 212, 255, 0.28),
+                    0 0 36px rgba(0, 212, 255, 0.16),
                     0 12px 24px rgba(1, 8, 19, 0.34),
-                    inset 0 0 0 1px rgba(208, 235, 255, 0.06);
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.10);
             }
         }
 
@@ -1374,10 +1374,10 @@ def _inject_dashboard_styles() -> None:
                 opacity: 0;
             }
             20% {
-                opacity: 0.62;
+                opacity: 0.78;
             }
             55% {
-                opacity: 0.08;
+                opacity: 0.16;
             }
             100% {
                 transform: translateX(150%) rotate(9deg);
@@ -1387,52 +1387,52 @@ def _inject_dashboard_styles() -> None:
 
         @keyframes jtLogoDiamondPulse {
             0% {
-                filter: brightness(0.96);
+                filter: brightness(1.00);
                 box-shadow:
-                    0 0 12px rgba(104, 223, 255, 0.42),
-                    0 0 26px rgba(104, 223, 255, 0.18),
-                    inset 0 0 12px rgba(245, 252, 255, 0.12);
+                    0 0 15px rgba(104, 223, 255, 0.52),
+                    0 0 30px rgba(104, 223, 255, 0.25),
+                    inset 0 0 12px rgba(245, 252, 255, 0.18);
             }
             50% {
-                filter: brightness(1.16);
+                filter: brightness(1.24);
                 box-shadow:
-                    0 0 18px rgba(104, 223, 255, 0.64),
-                    0 0 34px rgba(104, 223, 255, 0.28),
-                    inset 0 0 16px rgba(245, 252, 255, 0.24);
+                    0 0 24px rgba(104, 223, 255, 0.82),
+                    0 0 44px rgba(104, 223, 255, 0.40),
+                    inset 0 0 18px rgba(245, 252, 255, 0.30);
             }
             100% {
-                filter: brightness(0.96);
+                filter: brightness(1.00);
                 box-shadow:
-                    0 0 12px rgba(104, 223, 255, 0.42),
-                    0 0 26px rgba(104, 223, 255, 0.18),
-                    inset 0 0 12px rgba(245, 252, 255, 0.12);
+                    0 0 15px rgba(104, 223, 255, 0.52),
+                    0 0 30px rgba(104, 223, 255, 0.25),
+                    inset 0 0 12px rgba(245, 252, 255, 0.18);
             }
         }
 
         @keyframes jtLogoSparkle {
             0% {
-                opacity: 0.22;
+                opacity: 0.30;
                 transform: scale(0.80);
             }
             50% {
-                opacity: 0.95;
-                transform: scale(1.10);
+                opacity: 1;
+                transform: scale(1.16);
             }
             100% {
-                opacity: 0.22;
+                opacity: 0.30;
                 transform: scale(0.80);
             }
         }
 
         @keyframes jtLogoTitleGlow {
             0% {
-                text-shadow: 0 0 4px rgba(142, 232, 255, 0.26), 0 0 10px rgba(0, 212, 255, 0.12);
+                text-shadow: 0 0 6px rgba(142, 232, 255, 0.34), 0 0 14px rgba(0, 212, 255, 0.20);
             }
             50% {
-                text-shadow: 0 0 9px rgba(180, 244, 255, 0.48), 0 0 20px rgba(0, 212, 255, 0.24);
+                text-shadow: 0 0 12px rgba(180, 244, 255, 0.64), 0 0 28px rgba(0, 212, 255, 0.36);
             }
             100% {
-                text-shadow: 0 0 4px rgba(142, 232, 255, 0.26), 0 0 10px rgba(0, 212, 255, 0.12);
+                text-shadow: 0 0 6px rgba(142, 232, 255, 0.34), 0 0 14px rgba(0, 212, 255, 0.20);
             }
         }
 
@@ -1444,13 +1444,13 @@ def _inject_dashboard_styles() -> None:
             margin: 0.08rem auto 0.52rem auto;
             padding: 0.38rem 0.90rem 0.40rem 0.42rem;
             border-radius: 14px;
-            border: 1px solid rgba(138, 221, 255, 0.44);
+            border: 1px solid rgba(138, 221, 255, 0.56);
             background: linear-gradient(160deg, rgba(8, 19, 34, 0.96), rgba(6, 15, 29, 0.94));
             box-shadow:
-                0 0 12px rgba(0, 212, 255, 0.20),
-                0 0 28px rgba(0, 212, 255, 0.10),
+                0 0 16px rgba(0, 212, 255, 0.28),
+                0 0 36px rgba(0, 212, 255, 0.16),
                 0 12px 24px rgba(1, 8, 19, 0.34),
-                inset 0 0 0 1px rgba(208, 235, 255, 0.06);
+                inset 0 0 0 1px rgba(208, 235, 255, 0.10);
             overflow: hidden;
             isolation: isolate;
             animation: jtLogoNeonPulse 3.9s ease-in-out infinite;
@@ -1463,7 +1463,7 @@ def _inject_dashboard_styles() -> None:
             right: 0;
             top: 0;
             height: 1px;
-            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(176, 243, 255, 0.88), rgba(92, 201, 255, 0.0));
+            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(176, 243, 255, 1), rgba(92, 201, 255, 0.0));
             pointer-events: none;
         }
 
@@ -1475,8 +1475,8 @@ def _inject_dashboard_styles() -> None:
             width: 34%;
             left: 0;
             pointer-events: none;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(209, 244, 255, 0.52), rgba(255, 255, 255, 0.0));
-            filter: blur(7px);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(209, 244, 255, 0.68), rgba(255, 255, 255, 0.0));
+            filter: blur(8px);
             opacity: 0;
             animation: jtLogoSweep 4.8s linear infinite;
         }
@@ -1495,16 +1495,16 @@ def _inject_dashboard_styles() -> None:
             font-weight: 800;
             letter-spacing: 0.07em;
             color: #F1FAFF;
-            text-shadow: 0 0 6px rgba(228, 251, 255, 0.42);
+            text-shadow: 0 0 8px rgba(228, 251, 255, 0.56);
             clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
-            border: 1px solid rgba(176, 237, 255, 0.76);
+            border: 1px solid rgba(176, 237, 255, 0.88);
             background:
                 linear-gradient(145deg, rgba(100, 219, 255, 0.18), rgba(120, 237, 255, 0.10)),
                 linear-gradient(145deg, rgba(20, 118, 167, 0.98), rgba(14, 87, 140, 0.98));
             box-shadow:
-                0 0 12px rgba(104, 223, 255, 0.42),
-                0 0 26px rgba(104, 223, 255, 0.18),
-                inset 0 0 12px rgba(245, 252, 255, 0.12);
+                0 0 15px rgba(104, 223, 255, 0.52),
+                0 0 30px rgba(104, 223, 255, 0.25),
+                inset 0 0 12px rgba(245, 252, 255, 0.18);
             animation: jtLogoDiamondPulse 2.9s ease-in-out infinite;
             overflow: visible;
         }
