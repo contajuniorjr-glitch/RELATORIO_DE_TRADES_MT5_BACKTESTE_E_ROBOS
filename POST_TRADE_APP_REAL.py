@@ -1147,6 +1147,16 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             padding: 0.60rem 0.72rem;
             box-shadow: 0 8px 20px rgba(2, 6, 23, 0.28);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        div[data-testid="stMetric"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.66);
+            box-shadow:
+                0 0 12px rgba(0, 212, 255, 0.30),
+                0 0 30px rgba(0, 212, 255, 0.16),
+                0 12px 24px rgba(2, 6, 23, 0.38);
         }
 
         div[data-testid="stMetricLabel"] > div {
@@ -1189,6 +1199,16 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             background: linear-gradient(180deg, rgba(11, 18, 32, 0.50), rgba(11, 18, 32, 0.34));
             overflow: hidden;
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        [data-testid="stExpander"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.58);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.24),
+                0 0 24px rgba(0, 212, 255, 0.12),
+                0 10px 18px rgba(2, 6, 23, 0.34);
         }
 
         [data-testid="stDataFrame"] {
@@ -1196,11 +1216,62 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 7px 16px rgba(2, 6, 23, 0.24);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        [data-testid="stDataFrame"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.56);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.22),
+                0 0 24px rgba(0, 212, 255, 0.11),
+                0 10px 18px rgba(2, 6, 23, 0.32);
         }
 
         .stAlert {
             border-radius: 12px;
             border: 1px solid rgba(148, 163, 184, 0.30);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        .stAlert:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.60);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.24),
+                0 0 24px rgba(0, 212, 255, 0.12),
+                0 10px 18px rgba(2, 6, 23, 0.32);
+        }
+
+        .jt-report-card {
+            position: relative;
+            transition: transform 0.24s ease, box-shadow 0.28s ease, filter 0.28s ease;
+        }
+
+        .jt-report-card:hover {
+            transform: translateY(-2px);
+            filter: saturate(1.08);
+            box-shadow:
+                0 0 12px rgba(0, 212, 255, 0.34),
+                0 0 30px rgba(0, 212, 255, 0.18),
+                0 12px 24px rgba(2, 6, 23, 0.36) !important;
+        }
+
+        .jt-report-card::after {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 12px;
+            pointer-events: none;
+            border: 1px solid rgba(130, 240, 255, 0.0);
+            transition: border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .jt-report-card:hover::after {
+            border-color: rgba(130, 240, 255, 0.56);
+            box-shadow:
+                0 0 8px rgba(130, 240, 255, 0.34),
+                inset 0 0 12px rgba(0, 212, 255, 0.10);
         }
 
         :is(
@@ -1340,6 +1411,265 @@ def _inject_dashboard_styles() -> None:
                     inset 0 0 6px rgba(0, 212, 255, 0.12);
             }
         }
+
+        @keyframes jtLogoNeonPulse {
+            0% {
+                border-color: rgba(138, 221, 255, 0.56);
+                box-shadow:
+                    0 0 16px rgba(0, 212, 255, 0.28),
+                    0 0 36px rgba(0, 212, 255, 0.16),
+                    0 12px 24px rgba(1, 8, 19, 0.34),
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.10);
+            }
+            50% {
+                border-color: rgba(176, 243, 255, 0.92);
+                box-shadow:
+                    0 0 26px rgba(0, 212, 255, 0.52),
+                    0 0 56px rgba(0, 212, 255, 0.34),
+                    0 14px 26px rgba(1, 8, 19, 0.40),
+                    inset 0 0 0 1px rgba(220, 246, 255, 0.18);
+            }
+            100% {
+                border-color: rgba(138, 221, 255, 0.56);
+                box-shadow:
+                    0 0 16px rgba(0, 212, 255, 0.28),
+                    0 0 36px rgba(0, 212, 255, 0.16),
+                    0 12px 24px rgba(1, 8, 19, 0.34),
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.10);
+            }
+        }
+
+        @keyframes jtLogoSweep {
+            0% {
+                transform: translateX(-130%) rotate(9deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.78;
+            }
+            55% {
+                opacity: 0.16;
+            }
+            100% {
+                transform: translateX(150%) rotate(9deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes jtLogoDiamondPulse {
+            0% {
+                filter: brightness(1.00);
+                box-shadow:
+                    0 0 15px rgba(104, 223, 255, 0.52),
+                    0 0 30px rgba(104, 223, 255, 0.25),
+                    inset 0 0 12px rgba(245, 252, 255, 0.18);
+            }
+            50% {
+                filter: brightness(1.24);
+                box-shadow:
+                    0 0 24px rgba(104, 223, 255, 0.82),
+                    0 0 44px rgba(104, 223, 255, 0.40),
+                    inset 0 0 18px rgba(245, 252, 255, 0.30);
+            }
+            100% {
+                filter: brightness(1.00);
+                box-shadow:
+                    0 0 15px rgba(104, 223, 255, 0.52),
+                    0 0 30px rgba(104, 223, 255, 0.25),
+                    inset 0 0 12px rgba(245, 252, 255, 0.18);
+            }
+        }
+
+        @keyframes jtLogoSparkle {
+            0% {
+                opacity: 0.30;
+                transform: scale(0.80);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.16);
+            }
+            100% {
+                opacity: 0.30;
+                transform: scale(0.80);
+            }
+        }
+
+        @keyframes jtLogoTitleGlow {
+            0% {
+                text-shadow: 0 0 6px rgba(142, 232, 255, 0.34), 0 0 14px rgba(0, 212, 255, 0.20);
+            }
+            50% {
+                text-shadow: 0 0 12px rgba(180, 244, 255, 0.64), 0 0 28px rgba(0, 212, 255, 0.36);
+            }
+            100% {
+                text-shadow: 0 0 6px rgba(142, 232, 255, 0.34), 0 0 14px rgba(0, 212, 255, 0.20);
+            }
+        }
+
+        .jt-logo-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.64rem;
+            margin: 0.08rem auto 0.52rem auto;
+            padding: 0.38rem 0.90rem 0.40rem 0.42rem;
+            border-radius: 14px;
+            border: 1px solid rgba(138, 221, 255, 0.56);
+            background: linear-gradient(160deg, rgba(8, 19, 34, 0.96), rgba(6, 15, 29, 0.94));
+            box-shadow:
+                0 0 16px rgba(0, 212, 255, 0.28),
+                0 0 36px rgba(0, 212, 255, 0.16),
+                0 12px 24px rgba(1, 8, 19, 0.34),
+                inset 0 0 0 1px rgba(208, 235, 255, 0.10);
+            overflow: hidden;
+            isolation: isolate;
+            animation: jtLogoNeonPulse 3.9s ease-in-out infinite;
+        }
+
+        .jt-logo-wrap::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(176, 243, 255, 1), rgba(92, 201, 255, 0.0));
+            pointer-events: none;
+        }
+
+        .jt-logo-wrap::after {
+            content: "";
+            position: absolute;
+            top: -40%;
+            bottom: -40%;
+            width: 34%;
+            left: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(209, 244, 255, 0.68), rgba(255, 255, 255, 0.0));
+            filter: blur(8px);
+            opacity: 0;
+            animation: jtLogoSweep 4.8s linear infinite;
+        }
+
+        .jt-logo-mark {
+            position: relative;
+            z-index: 1;
+            width: 37px;
+            height: 37px;
+            min-width: 37px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-body);
+            font-size: 0.77rem;
+            font-weight: 800;
+            letter-spacing: 0.07em;
+            color: #F1FAFF;
+            text-shadow: 0 0 8px rgba(228, 251, 255, 0.56);
+            clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+            border: 1px solid rgba(176, 237, 255, 0.88);
+            background:
+                linear-gradient(145deg, rgba(100, 219, 255, 0.18), rgba(120, 237, 255, 0.10)),
+                linear-gradient(145deg, rgba(20, 118, 167, 0.98), rgba(14, 87, 140, 0.98));
+            box-shadow:
+                0 0 15px rgba(104, 223, 255, 0.52),
+                0 0 30px rgba(104, 223, 255, 0.25),
+                inset 0 0 12px rgba(245, 252, 255, 0.18);
+            animation: jtLogoDiamondPulse 2.9s ease-in-out infinite;
+            overflow: visible;
+        }
+
+        .jt-logo-mark::before,
+        .jt-logo-mark::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(238, 253, 255, 0.94) 0%, rgba(238, 253, 255, 0.0) 68%);
+            animation: jtLogoSparkle 1.9s ease-in-out infinite;
+        }
+
+        .jt-logo-mark::before {
+            width: 10px;
+            height: 10px;
+            top: 2px;
+            right: 2px;
+            animation-delay: 0.2s;
+        }
+
+        .jt-logo-mark::after {
+            width: 7px;
+            height: 7px;
+            left: 3px;
+            bottom: 3px;
+            animation-delay: 0.95s;
+        }
+
+        .jt-logo-text {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            flex-direction: column;
+            line-height: 1.03;
+            text-align: left;
+        }
+
+        .jt-logo-kicker {
+            font-family: var(--font-body);
+            font-size: 0.48rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #95B4D7;
+        }
+
+        .jt-logo-title {
+            margin-top: 0.03rem;
+            font-family: var(--font-head);
+            font-size: 1.12rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            background: linear-gradient(92deg, #F2F9FF 0%, #B7EEFF 46%, #D8FBFF 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: jtLogoTitleGlow 3.2s ease-in-out infinite;
+        }
+
+        .jt-logo-sub {
+            margin-top: 0.10rem;
+            font-family: var(--font-body);
+            font-size: 0.54rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: #A7C3E1;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 680px) {
+            .jt-logo-wrap {
+                gap: 0.52rem;
+                padding: 0.31rem 0.64rem 0.33rem 0.34rem;
+            }
+            .jt-logo-mark {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                font-size: 0.68rem;
+            }
+            .jt-logo-kicker {
+                font-size: 0.44rem;
+                letter-spacing: 0.15em;
+            }
+            .jt-logo-title {
+                font-size: 0.94rem;
+            }
+            .jt-logo-sub {
+                font-size: 0.49rem;
+                letter-spacing: 0.12em;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1398,9 +1728,27 @@ def _centered_heading(text: str, level: int = 2) -> None:
         unsafe_allow_html=True,
     )
 
+def _render_junior_trades_logo() -> None:
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; width:100%;">
+            <div class="jt-logo-wrap" aria-label="Junior Trades">
+                <div class="jt-logo-mark" aria-hidden="true">JT</div>
+                <div class="jt-logo-text">
+                    <span class="jt-logo-kicker">Trading Lab</span>
+                    <span class="jt-logo-title">Junior Trades</span>
+                    <span class="jt-logo-sub">Relatório de Performance</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 _inject_dashboard_styles()
 _init_session_defaults()
 _centered_heading("Relatório Pós-Trade — MT5/CSV", level=1)
+_render_junior_trades_logo()
 st.caption("Completo: timezone fix, setups do robô, MT5 via MAGIC, custos B3 auto, candles com entrada/saída, stop inicial do CSV, tabelas formatadas, leaderboards e exportações.")
 
 # --------- Sidebar (parte 1): fonte e custos + botão carregar ---------
@@ -2056,12 +2404,29 @@ def _compensation_diagnosis(
     color = "#22C55E"
     return status, color, reasons, alerts
 
+def _compensation_explanation(status: str, reasons: list[str], alerts: list[str]) -> str:
+    if status == "Não compensa":
+        if alerts:
+            return alerts[0]
+        if reasons:
+            return reasons[0]
+        return "O retorno líquido e a expectativa por trade ainda não sustentam o risco e os custos."
+    if status == "Compensa com ressalvas":
+        if alerts:
+            return alerts[0]
+        if reasons:
+            return reasons[0]
+        return "Há edge, mas com fragilidades de risco/custos que pedem ajuste."
+    if reasons:
+        return reasons[0]
+    return "Retorno, eficiência e risco estão equilibrados em nível operacional saudável."
+
 def _render_pillar_chip(title: str, score: float, detail: str) -> None:
     label, color = _score_band(score)
     score_10 = _safe_num(score) / 10.0
     st.markdown(
         f"""
-        <div style="border:1px solid rgba(148,163,184,0.28); border-left:4px solid {color};
+        <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.28); border-left:4px solid {color};
                     border-radius:12px; padding:11px 12px;
                     background:linear-gradient(180deg, rgba(15,23,42,0.70), rgba(15,23,42,0.46));
                     box-shadow:0 6px 18px rgba(2,6,23,0.22); min-height:122px;">
@@ -2176,6 +2541,7 @@ comp_status, comp_color, comp_reasons, comp_alerts = _compensation_diagnosis(
     cost_ratio_v=cost_ratio,
     pct_meses_pos_v=pct_meses_pos,
 )
+comp_why = _compensation_explanation(comp_status, comp_reasons, comp_alerts)
 
 qual_entry_base = _qual_band(payoff, 2.0, 1.4)
 qual_stability_base = _qual_band(win_rate, 0.58, 0.47)
@@ -2226,7 +2592,7 @@ with r5:
 
 st.markdown(
     f"""
-    <div style="border:1px solid rgba(148,163,184,0.30); border-radius:12px; padding:10px 12px;
+    <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.30); border-radius:12px; padding:10px 12px;
                 background:linear-gradient(180deg, rgba(15,23,42,0.72), rgba(15,23,42,0.48));">
         <div style="font-size:0.80rem; color:#A7B7D1; letter-spacing:0.03em;">LEITURA RÁPIDA DE MESA</div>
         <div style="font-size:0.95rem; color:#E2E8F0; margin-top:4px;">
@@ -2260,10 +2626,13 @@ with tab_diag:
     )
     st.markdown(
         f"""
-        <div style="border:1px solid rgba(148,163,184,0.30); border-left:5px solid {comp_color};
+        <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.30); border-left:5px solid {comp_color};
                     border-radius:12px; padding:10px 12px; background:rgba(15,23,42,0.55);">
             <div style="font-size:0.78rem; color:#A7B7D1; letter-spacing:0.03em;">DECISÃO DE COMPENSAÇÃO</div>
             <div style="font-size:1.25rem; font-weight:700; color:{comp_color};">{comp_status}</div>
+            <div style="font-size:0.86rem; color:#E2ECFB; margin-top:4px;">
+                <b>Por quê:</b> {comp_why}
+            </div>
             <div style="font-size:0.80rem; color:#C4D3E8; margin-top:3px;">
                 O diagnóstico considera compensações entre acerto, payoff, expectativa, drawdown e custos.
             </div>
@@ -2271,36 +2640,38 @@ with tab_diag:
         """,
         unsafe_allow_html=True,
     )
-    if comp_reasons:
-        st.markdown("**O que está compensando**")
-        for msg in comp_reasons:
-            st.caption(f"• {msg}")
-    if comp_alerts:
-        st.markdown("**Ressalvas críticas**")
-        for msg in comp_alerts:
-            st.caption(f"• {msg}")
 
-    diag_col1, diag_col2 = st.columns(2)
-    with diag_col1:
-        st.markdown("**Diagnóstico Executivo**")
-        quality_suffix = " (compensado por consistência e expectativa)" if entry_compensated else ""
-        stability_suffix = " (compensado por payoff/expectativa)" if stability_compensated else ""
-        risk_suffix = " (compensado por edge e consistência)" if risk_compensated else ""
-        cost_suffix = " (compensado por edge líquido)" if cost_compensated else ""
-        st.markdown(
-            f"- Qualidade de entrada/saída: **{qual_entry}**{quality_suffix} (Payoff {payoff:.2f}).\n"
-            f"- Estabilidade de resultado: **{qual_stability}**{stability_suffix} (Win Rate {pct(win_rate)}).\n"
-            f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)}).\n"
-            f"- Eficiência de custos: **{qual_cost}**{cost_suffix} (Custos/|P&L| {cost_ratio:.2%})."
-        )
-    with diag_col2:
-        st.markdown("**Faixas de Referência**")
-        st.markdown(
-            "- Win Rate: Excelente >= 58% | Bom >= 47%\n"
-            "- Payoff: Excelente >= 2.00 | Bom >= 1.40\n"
-            "- Drawdown %: Excelente <= 8% | Bom <= 14%\n"
-            "- Custos/|P&L|: Excelente <= 12% | Bom <= 25%"
-        )
+    with st.expander("Ver detalhes do diagnóstico", expanded=False):
+        if comp_reasons:
+            st.markdown("**O que está compensando**")
+            for msg in comp_reasons:
+                st.caption(f"• {msg}")
+        if comp_alerts:
+            st.markdown("**Ressalvas críticas**")
+            for msg in comp_alerts:
+                st.caption(f"• {msg}")
+
+        diag_col1, diag_col2 = st.columns(2)
+        with diag_col1:
+            st.markdown("**Diagnóstico Executivo**")
+            quality_suffix = " (compensado por consistência e expectativa)" if entry_compensated else ""
+            stability_suffix = " (compensado por payoff/expectativa)" if stability_compensated else ""
+            risk_suffix = " (compensado por edge e consistência)" if risk_compensated else ""
+            cost_suffix = " (compensado por edge líquido)" if cost_compensated else ""
+            st.markdown(
+                f"- Qualidade de entrada/saída: **{qual_entry}**{quality_suffix} (Payoff {payoff:.2f}).\n"
+                f"- Estabilidade de resultado: **{qual_stability}**{stability_suffix} (Win Rate {pct(win_rate)}).\n"
+                f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)}).\n"
+                f"- Eficiência de custos: **{qual_cost}**{cost_suffix} (Custos/|P&L| {cost_ratio:.2%})."
+            )
+        with diag_col2:
+            st.markdown("**Faixas de Referência**")
+            st.markdown(
+                "- Win Rate: Excelente >= 58% | Bom >= 47%\n"
+                "- Payoff: Excelente >= 2.00 | Bom >= 1.40\n"
+                "- Drawdown %: Excelente <= 8% | Bom <= 14%\n"
+                "- Custos/|P&L|: Excelente <= 12% | Bom <= 25%"
+            )
 
 with tab_ret:
     a1, a2, a3 = st.columns(3)
