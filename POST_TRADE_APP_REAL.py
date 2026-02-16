@@ -14,6 +14,9 @@ import importlib
 import unicodedata
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 import pandas as pd
@@ -33,6 +36,7 @@ except Exception:
 
 BASE_DIR = os.path.dirname(__file__)
 CANDLE_COLORS_FILE = os.path.join(BASE_DIR, "candle_colors.json")
+ROBOT_PREFS_FILE = os.path.join(BASE_DIR, "stored_robot_prefs.json")
 
 SESSION_DEFAULTS = {
     "use_csv": not HAS_MT5,
@@ -62,7 +66,15 @@ SESSION_DEFAULTS = {
     "capital_qty_min": 1.0,
     "capital_qty_step": 1.0,
     "pending_trade_sim_idx": None,
+    "robot_executable_path": "",
+    "robot_executable_path_input": "",
+    "robot_csv_auto_path": "",
+    "robot_last_launch_ts": 0.0,
+    "csv_source_label": "",
 }
+
+ROBOT_EXEC_EXTENSIONS = {".exe", ".bat", ".cmd", ".com", ".py"}
+CSV_NAME_HINTS = ("trade", "trades", "backtest", "relatorio", "report", "resultado")
 
 TRADE_COL_ALIASES = {
     "ativo": "symbol",
@@ -128,6 +140,125 @@ def _save_candle_colors(colors: dict) -> None:
             json.dump(colors, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
+
+def _load_robot_prefs() -> dict:
+    if os.path.exists(ROBOT_PREFS_FILE):
+        try:
+            with open(ROBOT_PREFS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    return {}
+
+def _save_robot_prefs(robot_exec_path: str) -> None:
+    try:
+        payload = {"robot_executable_path": _normalize_local_path(robot_exec_path)}
+        with open(ROBOT_PREFS_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def _normalize_local_path(path_value: str) -> str:
+    path = str(path_value or "").strip().strip('"').strip("'")
+    if not path:
+        return ""
+    return os.path.normpath(os.path.expanduser(path))
+
+def _pick_robot_executable_dialog() -> str | None:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            root.attributes("-topmost", True)
+        except Exception:
+            pass
+        selected = filedialog.askopenfilename(
+            title="Selecione o executável do robô",
+            filetypes=[
+                ("Executáveis/Scripts", "*.exe *.bat *.cmd *.com *.py"),
+                ("Todos os arquivos", "*.*"),
+            ],
+        )
+        root.destroy()
+        chosen = _normalize_local_path(selected)
+        return chosen if chosen else None
+    except Exception:
+        return None
+
+def _hydrate_robot_prefs_to_session() -> None:
+    saved_path = _normalize_local_path(_load_robot_prefs().get("robot_executable_path", ""))
+    if not saved_path:
+        return
+    if not st.session_state.get("robot_executable_path"):
+        st.session_state["robot_executable_path"] = saved_path
+    if not st.session_state.get("robot_executable_path_input"):
+        st.session_state["robot_executable_path_input"] = saved_path
+
+def _find_latest_csv_in_folder(folder_path: str, modified_after: float | None = None) -> str | None:
+    folder = _normalize_local_path(folder_path)
+    if not folder:
+        return None
+    base = Path(folder)
+    if not base.exists() or not base.is_dir():
+        return None
+
+    try:
+        csv_files = [p for p in base.iterdir() if p.is_file() and p.suffix.lower() == ".csv"]
+    except Exception:
+        return None
+    if not csv_files:
+        return None
+
+    if modified_after:
+        recent = [p for p in csv_files if p.stat().st_mtime >= float(modified_after)]
+    else:
+        recent = []
+    base_pool = recent if recent else csv_files
+
+    hinted = [p for p in base_pool if any(h in p.name.lower() for h in CSV_NAME_HINTS)]
+    pool = hinted if hinted else base_pool
+    latest = max(pool, key=lambda p: p.stat().st_mtime)
+    return str(latest.resolve())
+
+def _auto_csv_from_robot_path(robot_path: str, modified_after: float | None = None) -> str | None:
+    robo = _normalize_local_path(robot_path)
+    if not robo:
+        return None
+    robot_file = Path(robo)
+    if not robot_file.exists():
+        return None
+    if robot_file.is_dir():
+        return _find_latest_csv_in_folder(str(robot_file), modified_after=modified_after)
+    return _find_latest_csv_in_folder(str(robot_file.parent), modified_after=modified_after)
+
+def _launch_robot_executable(robot_path: str) -> tuple[bool, str]:
+    robo = _normalize_local_path(robot_path)
+    if not robo:
+        return False, "Selecione o executável do robô primeiro."
+    robot_file = Path(robo)
+    if not robot_file.exists() or not robot_file.is_file():
+        return False, "Executável do robô não encontrado no caminho informado."
+
+    suffix = robot_file.suffix.lower()
+    if suffix not in ROBOT_EXEC_EXTENSIONS:
+        return False, "Formato não suportado. Use .exe, .bat, .cmd, .com ou .py."
+
+    creationflags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+    cwd = str(robot_file.parent)
+    try:
+        if suffix in {".bat", ".cmd"}:
+            subprocess.Popen(["cmd", "/c", str(robot_file)], cwd=cwd, creationflags=creationflags)
+        elif suffix == ".py":
+            subprocess.Popen([sys.executable, str(robot_file)], cwd=cwd, creationflags=creationflags)
+        else:
+            subprocess.Popen([str(robot_file)], cwd=cwd, creationflags=creationflags)
+        return True, f"Robô iniciado: {robot_file.name}"
+    except Exception as e:
+        return False, f"Falha ao iniciar o robô: {e}"
 
 # =============================== Utils ===============================
 
@@ -681,8 +812,24 @@ def apply_max_concurrent_limit(df: pd.DataFrame, max_open: int) -> pd.DataFrame:
 def _cached_read_csv_bytes(raw_bytes, sep=None, decimal=None, encoding=None):
     return pd.read_csv(io.BytesIO(raw_bytes), sep=sep, decimal=decimal, encoding=encoding)
 
-def _try_read_csv(file) -> pd.DataFrame:
-    raw = file.read()
+def _read_csv_source_bytes(source) -> bytes:
+    if isinstance(source, (str, os.PathLike)):
+        with open(str(source), "rb") as f:
+            return f.read()
+
+    if hasattr(source, "seek"):
+        try:
+            source.seek(0)
+        except Exception:
+            pass
+
+    raw = source.read()
+    if isinstance(raw, str):
+        return raw.encode("utf-8", errors="ignore")
+    return raw
+
+def _try_read_csv(source) -> pd.DataFrame:
+    raw = _read_csv_source_bytes(source)
     tried = []
     for enc in ["utf-8-sig", "latin1"]:
         for sep in [",", ";", "\t", "|"]:
@@ -699,8 +846,8 @@ def _try_read_csv(file) -> pd.DataFrame:
                     pass
     return _cached_read_csv_bytes(raw)
 
-def read_from_csv(file):
-    df = _try_read_csv(file)
+def read_from_csv(source):
+    df = _try_read_csv(source)
 
     # Renomeia colunas de forma robusta (ignora acentos, caixa e separadores)
     df = _smart_rename_trade_columns(df)
@@ -1747,6 +1894,7 @@ def _render_junior_trades_logo() -> None:
 
 _inject_dashboard_styles()
 _init_session_defaults()
+_hydrate_robot_prefs_to_session()
 _centered_heading("Relatório Pós-Trade — MT5/CSV", level=1)
 _render_junior_trades_logo()
 st.caption("Completo: timezone fix, setups do robô, MT5 via MAGIC, custos B3 auto, candles com entrada/saída, stop inicial do CSV, tabelas formatadas, leaderboards e exportações.")
@@ -1766,6 +1914,72 @@ def _render_data_sidebar() -> bool:
         st.session_state["use_csv"] = use_csv
         if use_csv:
             st.file_uploader("Selecione o CSV de trades", type=["csv","txt"], key="up_trades")
+            st.caption("Opcional: selecione e execute o robô para leitura automática do CSV na mesma pasta.")
+            saved_robot_path = _normalize_local_path(st.session_state.get("robot_executable_path", ""))
+            if saved_robot_path:
+                st.caption(f"Robô salvo: {saved_robot_path}")
+
+            col_pick, col_refresh = st.columns(2)
+            if col_pick.button("Procurar executável do robô", key="btn_pick_robot_exec"):
+                chosen = _pick_robot_executable_dialog()
+                if chosen:
+                    st.session_state["robot_executable_path"] = chosen
+                    st.session_state["robot_executable_path_input"] = chosen
+                    _save_robot_prefs(chosen)
+                    st.success(f"Executável selecionado: {chosen}")
+                else:
+                    st.info("Seleção cancelada ou indisponível neste ambiente.")
+
+            if col_refresh.button("Atualizar CSV da pasta", key="btn_refresh_robot_csv"):
+                csv_now = _auto_csv_from_robot_path(
+                    st.session_state.get("robot_executable_path", ""),
+                    modified_after=float(st.session_state.get("robot_last_launch_ts", 0.0) or 0.0),
+                )
+                st.session_state["robot_csv_auto_path"] = csv_now or ""
+                if csv_now:
+                    st.success(f"CSV detectado: {os.path.basename(csv_now)}")
+                else:
+                    st.warning("Nenhum CSV encontrado na pasta do robô.")
+
+            st.session_state.setdefault(
+                "robot_executable_path_input",
+                st.session_state.get("robot_executable_path", ""),
+            )
+            robot_path_input = st.text_input(
+                "Executável do robô (opcional)",
+                key="robot_executable_path_input",
+                placeholder=r"C:\pasta_do_robo\seu_robo.exe",
+            )
+            prev_robot_path = _normalize_local_path(st.session_state.get("robot_executable_path", ""))
+            st.session_state["robot_executable_path"] = _normalize_local_path(robot_path_input)
+            if st.session_state["robot_executable_path"] != prev_robot_path:
+                _save_robot_prefs(st.session_state["robot_executable_path"])
+
+            col_run, col_clear = st.columns(2)
+            if col_run.button("Abrir robô", key="btn_run_robot_exec"):
+                ok, msg = _launch_robot_executable(st.session_state.get("robot_executable_path", ""))
+                if ok:
+                    st.session_state["robot_last_launch_ts"] = datetime.now().timestamp()
+                    st.success(msg)
+                else:
+                    st.error(msg)
+            if col_clear.button("Limpar robô salvo", key="btn_clear_robot_saved"):
+                st.session_state["robot_executable_path"] = ""
+                st.session_state["robot_executable_path_input"] = ""
+                st.session_state["robot_csv_auto_path"] = ""
+                st.session_state["robot_last_launch_ts"] = 0.0
+                _save_robot_prefs("")
+                st.success("Caminho do robô salvo foi removido.")
+
+            csv_auto = _auto_csv_from_robot_path(
+                st.session_state.get("robot_executable_path", ""),
+                modified_after=float(st.session_state.get("robot_last_launch_ts", 0.0) or 0.0),
+            )
+            st.session_state["robot_csv_auto_path"] = csv_auto or ""
+            if csv_auto:
+                st.caption(f"CSV automático: {csv_auto}")
+            elif st.session_state.get("robot_executable_path", ""):
+                st.caption("Sem CSV encontrado na pasta do robô.")
         else:
             st.session_state["mt5_magic"] = st.number_input(
                 "Magic do robô",
@@ -2014,14 +2228,37 @@ def get_b3_costs_auto(trades_df: pd.DataFrame, url: str | None) -> float | None:
         return None
 
 def _load_trades_into_state():
+    st.session_state["csv_source_label"] = ""
     if st.session_state["use_csv"]:
         up = st.session_state.get("up_trades", None)
-        if not up:
-            st.error("Envie um CSV de trades para carregar.")
-            return False
-        df = read_from_csv(up)
-        st.session_state["trades_raw"] = df
-        return True
+        if up:
+            try:
+                df = read_from_csv(up)
+            except Exception as e:
+                st.error(f"Falha ao ler o CSV enviado: {e}")
+                return False
+            st.session_state["trades_raw"] = df
+            up_name = getattr(up, "name", "upload.csv")
+            st.session_state["csv_source_label"] = f"Upload: {up_name}"
+            return True
+
+        auto_csv = _auto_csv_from_robot_path(
+            st.session_state.get("robot_executable_path", ""),
+            modified_after=float(st.session_state.get("robot_last_launch_ts", 0.0) or 0.0),
+        )
+        if auto_csv:
+            try:
+                df = read_from_csv(auto_csv)
+            except Exception as e:
+                st.error(f"Falha ao ler o CSV automático ({auto_csv}): {e}")
+                return False
+            st.session_state["robot_csv_auto_path"] = auto_csv
+            st.session_state["trades_raw"] = df
+            st.session_state["csv_source_label"] = auto_csv
+            return True
+
+        st.error("Envie um CSV de trades ou selecione/execute o robô para leitura automática.")
+        return False
     else:
         if not HAS_MT5:
             st.error("MT5 não está disponível.")
@@ -2037,6 +2274,7 @@ def _load_trades_into_state():
                 date_to=date_to
             )
             st.session_state["trades_raw"] = df
+            st.session_state["csv_source_label"] = "MT5"
             return True
         except Exception as e:
             st.error(f"Erro ao ler MT5: {e}")
@@ -2045,7 +2283,11 @@ def _load_trades_into_state():
 if load_clicked:
     ok = _load_trades_into_state()
     if ok:
-        st.success("Dados carregados/atualizados com sucesso.")
+        source_lbl = str(st.session_state.get("csv_source_label", "")).strip()
+        if source_lbl:
+            st.success(f"Dados carregados/atualizados com sucesso. Fonte: {source_lbl}")
+        else:
+            st.success("Dados carregados/atualizados com sucesso.")
         st.session_state["selected_trade_sim_idx"] = None
         st.rerun()
 
