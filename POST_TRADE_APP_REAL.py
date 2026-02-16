@@ -1341,20 +1341,119 @@ def _inject_dashboard_styles() -> None:
             }
         }
 
+        @keyframes jtLogoNeonPulse {
+            0% {
+                border-color: rgba(138, 221, 255, 0.44);
+                box-shadow:
+                    0 0 12px rgba(0, 212, 255, 0.20),
+                    0 0 28px rgba(0, 212, 255, 0.10),
+                    0 12px 24px rgba(1, 8, 19, 0.34),
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.06);
+            }
+            50% {
+                border-color: rgba(176, 243, 255, 0.78);
+                box-shadow:
+                    0 0 18px rgba(0, 212, 255, 0.36),
+                    0 0 42px rgba(0, 212, 255, 0.20),
+                    0 14px 26px rgba(1, 8, 19, 0.40),
+                    inset 0 0 0 1px rgba(220, 246, 255, 0.12);
+            }
+            100% {
+                border-color: rgba(138, 221, 255, 0.44);
+                box-shadow:
+                    0 0 12px rgba(0, 212, 255, 0.20),
+                    0 0 28px rgba(0, 212, 255, 0.10),
+                    0 12px 24px rgba(1, 8, 19, 0.34),
+                    inset 0 0 0 1px rgba(208, 235, 255, 0.06);
+            }
+        }
+
+        @keyframes jtLogoSweep {
+            0% {
+                transform: translateX(-130%) rotate(9deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.62;
+            }
+            55% {
+                opacity: 0.08;
+            }
+            100% {
+                transform: translateX(150%) rotate(9deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes jtLogoDiamondPulse {
+            0% {
+                filter: brightness(0.96);
+                box-shadow:
+                    0 0 12px rgba(104, 223, 255, 0.42),
+                    0 0 26px rgba(104, 223, 255, 0.18),
+                    inset 0 0 12px rgba(245, 252, 255, 0.12);
+            }
+            50% {
+                filter: brightness(1.16);
+                box-shadow:
+                    0 0 18px rgba(104, 223, 255, 0.64),
+                    0 0 34px rgba(104, 223, 255, 0.28),
+                    inset 0 0 16px rgba(245, 252, 255, 0.24);
+            }
+            100% {
+                filter: brightness(0.96);
+                box-shadow:
+                    0 0 12px rgba(104, 223, 255, 0.42),
+                    0 0 26px rgba(104, 223, 255, 0.18),
+                    inset 0 0 12px rgba(245, 252, 255, 0.12);
+            }
+        }
+
+        @keyframes jtLogoSparkle {
+            0% {
+                opacity: 0.22;
+                transform: scale(0.80);
+            }
+            50% {
+                opacity: 0.95;
+                transform: scale(1.10);
+            }
+            100% {
+                opacity: 0.22;
+                transform: scale(0.80);
+            }
+        }
+
+        @keyframes jtLogoTitleGlow {
+            0% {
+                text-shadow: 0 0 4px rgba(142, 232, 255, 0.26), 0 0 10px rgba(0, 212, 255, 0.12);
+            }
+            50% {
+                text-shadow: 0 0 9px rgba(180, 244, 255, 0.48), 0 0 20px rgba(0, 212, 255, 0.24);
+            }
+            100% {
+                text-shadow: 0 0 4px rgba(142, 232, 255, 0.26), 0 0 10px rgba(0, 212, 255, 0.12);
+            }
+        }
+
         .jt-logo-wrap {
             position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 0.62rem;
-            margin: 0.08rem auto 0.50rem auto;
-            padding: 0.36rem 0.84rem 0.38rem 0.40rem;
-            border-radius: 12px;
-            border: 1px solid rgba(136, 207, 242, 0.38);
-            background: linear-gradient(165deg, rgba(8, 17, 31, 0.95), rgba(7, 15, 27, 0.93));
+            gap: 0.64rem;
+            margin: 0.08rem auto 0.52rem auto;
+            padding: 0.38rem 0.90rem 0.40rem 0.42rem;
+            border-radius: 14px;
+            border: 1px solid rgba(138, 221, 255, 0.44);
+            background: linear-gradient(160deg, rgba(8, 19, 34, 0.96), rgba(6, 15, 29, 0.94));
             box-shadow:
-                0 8px 22px rgba(1, 8, 19, 0.32),
-                inset 0 0 0 1px rgba(203, 232, 255, 0.05);
+                0 0 12px rgba(0, 212, 255, 0.20),
+                0 0 28px rgba(0, 212, 255, 0.10),
+                0 12px 24px rgba(1, 8, 19, 0.34),
+                inset 0 0 0 1px rgba(208, 235, 255, 0.06);
             overflow: hidden;
+            isolation: isolate;
+            animation: jtLogoNeonPulse 3.9s ease-in-out infinite;
         }
 
         .jt-logo-wrap::before {
@@ -1364,28 +1463,76 @@ def _inject_dashboard_styles() -> None:
             right: 0;
             top: 0;
             height: 1px;
-            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(92, 201, 255, 0.75), rgba(92, 201, 255, 0.0));
+            background: linear-gradient(90deg, rgba(92, 201, 255, 0.0), rgba(176, 243, 255, 0.88), rgba(92, 201, 255, 0.0));
             pointer-events: none;
+        }
+
+        .jt-logo-wrap::after {
+            content: "";
+            position: absolute;
+            top: -40%;
+            bottom: -40%;
+            width: 34%;
+            left: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.0), rgba(209, 244, 255, 0.52), rgba(255, 255, 255, 0.0));
+            filter: blur(7px);
+            opacity: 0;
+            animation: jtLogoSweep 4.8s linear infinite;
         }
 
         .jt-logo-mark {
             position: relative;
             z-index: 1;
-            width: 35px;
-            height: 35px;
-            min-width: 35px;
-            border-radius: 9px;
+            width: 37px;
+            height: 37px;
+            min-width: 37px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-family: var(--font-body);
-            font-size: 0.78rem;
+            font-size: 0.77rem;
             font-weight: 800;
-            letter-spacing: 0.06em;
-            color: #EAF4FF;
-            border: 1px solid rgba(146, 219, 255, 0.56);
-            background: linear-gradient(145deg, rgba(20, 105, 149, 0.96), rgba(20, 79, 133, 0.96));
-            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.07em;
+            color: #F1FAFF;
+            text-shadow: 0 0 6px rgba(228, 251, 255, 0.42);
+            clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+            border: 1px solid rgba(176, 237, 255, 0.76);
+            background:
+                linear-gradient(145deg, rgba(100, 219, 255, 0.18), rgba(120, 237, 255, 0.10)),
+                linear-gradient(145deg, rgba(20, 118, 167, 0.98), rgba(14, 87, 140, 0.98));
+            box-shadow:
+                0 0 12px rgba(104, 223, 255, 0.42),
+                0 0 26px rgba(104, 223, 255, 0.18),
+                inset 0 0 12px rgba(245, 252, 255, 0.12);
+            animation: jtLogoDiamondPulse 2.9s ease-in-out infinite;
+            overflow: visible;
+        }
+
+        .jt-logo-mark::before,
+        .jt-logo-mark::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(238, 253, 255, 0.94) 0%, rgba(238, 253, 255, 0.0) 68%);
+            animation: jtLogoSparkle 1.9s ease-in-out infinite;
+        }
+
+        .jt-logo-mark::before {
+            width: 10px;
+            height: 10px;
+            top: 2px;
+            right: 2px;
+            animation-delay: 0.2s;
+        }
+
+        .jt-logo-mark::after {
+            width: 7px;
+            height: 7px;
+            left: 3px;
+            bottom: 3px;
+            animation-delay: 0.95s;
         }
 
         .jt-logo-text {
@@ -1403,7 +1550,7 @@ def _inject_dashboard_styles() -> None:
             font-weight: 700;
             letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: #87A8CC;
+            color: #95B4D7;
         }
 
         .jt-logo-title {
@@ -1412,7 +1559,11 @@ def _inject_dashboard_styles() -> None:
             font-size: 1.12rem;
             font-weight: 700;
             letter-spacing: 0.01em;
-            color: #EEF6FF;
+            background: linear-gradient(92deg, #F2F9FF 0%, #B7EEFF 46%, #D8FBFF 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: jtLogoTitleGlow 3.2s ease-in-out infinite;
         }
 
         .jt-logo-sub {
@@ -1421,20 +1572,20 @@ def _inject_dashboard_styles() -> None:
             font-size: 0.54rem;
             font-weight: 700;
             letter-spacing: 0.14em;
-            color: #A5BEDA;
+            color: #A7C3E1;
             text-transform: uppercase;
         }
 
         @media (max-width: 680px) {
             .jt-logo-wrap {
-                gap: 0.50rem;
-                padding: 0.30rem 0.62rem 0.32rem 0.34rem;
+                gap: 0.52rem;
+                padding: 0.31rem 0.64rem 0.33rem 0.34rem;
             }
             .jt-logo-mark {
-                width: 31px;
-                height: 31px;
-                min-width: 31px;
-                font-size: 0.70rem;
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+                font-size: 0.68rem;
             }
             .jt-logo-kicker {
                 font-size: 0.44rem;
