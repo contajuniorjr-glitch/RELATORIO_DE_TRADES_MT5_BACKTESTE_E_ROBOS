@@ -2640,36 +2640,38 @@ with tab_diag:
         """,
         unsafe_allow_html=True,
     )
-    if comp_reasons:
-        st.markdown("**O que está compensando**")
-        for msg in comp_reasons:
-            st.caption(f"• {msg}")
-    if comp_alerts:
-        st.markdown("**Ressalvas críticas**")
-        for msg in comp_alerts:
-            st.caption(f"• {msg}")
 
-    diag_col1, diag_col2 = st.columns(2)
-    with diag_col1:
-        st.markdown("**Diagnóstico Executivo**")
-        quality_suffix = " (compensado por consistência e expectativa)" if entry_compensated else ""
-        stability_suffix = " (compensado por payoff/expectativa)" if stability_compensated else ""
-        risk_suffix = " (compensado por edge e consistência)" if risk_compensated else ""
-        cost_suffix = " (compensado por edge líquido)" if cost_compensated else ""
-        st.markdown(
-            f"- Qualidade de entrada/saída: **{qual_entry}**{quality_suffix} (Payoff {payoff:.2f}).\n"
-            f"- Estabilidade de resultado: **{qual_stability}**{stability_suffix} (Win Rate {pct(win_rate)}).\n"
-            f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)}).\n"
-            f"- Eficiência de custos: **{qual_cost}**{cost_suffix} (Custos/|P&L| {cost_ratio:.2%})."
-        )
-    with diag_col2:
-        st.markdown("**Faixas de Referência**")
-        st.markdown(
-            "- Win Rate: Excelente >= 58% | Bom >= 47%\n"
-            "- Payoff: Excelente >= 2.00 | Bom >= 1.40\n"
-            "- Drawdown %: Excelente <= 8% | Bom <= 14%\n"
-            "- Custos/|P&L|: Excelente <= 12% | Bom <= 25%"
-        )
+    with st.expander("Ver detalhes do diagnóstico", expanded=False):
+        if comp_reasons:
+            st.markdown("**O que está compensando**")
+            for msg in comp_reasons:
+                st.caption(f"• {msg}")
+        if comp_alerts:
+            st.markdown("**Ressalvas críticas**")
+            for msg in comp_alerts:
+                st.caption(f"• {msg}")
+
+        diag_col1, diag_col2 = st.columns(2)
+        with diag_col1:
+            st.markdown("**Diagnóstico Executivo**")
+            quality_suffix = " (compensado por consistência e expectativa)" if entry_compensated else ""
+            stability_suffix = " (compensado por payoff/expectativa)" if stability_compensated else ""
+            risk_suffix = " (compensado por edge e consistência)" if risk_compensated else ""
+            cost_suffix = " (compensado por edge líquido)" if cost_compensated else ""
+            st.markdown(
+                f"- Qualidade de entrada/saída: **{qual_entry}**{quality_suffix} (Payoff {payoff:.2f}).\n"
+                f"- Estabilidade de resultado: **{qual_stability}**{stability_suffix} (Win Rate {pct(win_rate)}).\n"
+                f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)}).\n"
+                f"- Eficiência de custos: **{qual_cost}**{cost_suffix} (Custos/|P&L| {cost_ratio:.2%})."
+            )
+        with diag_col2:
+            st.markdown("**Faixas de Referência**")
+            st.markdown(
+                "- Win Rate: Excelente >= 58% | Bom >= 47%\n"
+                "- Payoff: Excelente >= 2.00 | Bom >= 1.40\n"
+                "- Drawdown %: Excelente <= 8% | Bom <= 14%\n"
+                "- Custos/|P&L|: Excelente <= 12% | Bom <= 25%"
+            )
 
 with tab_ret:
     a1, a2, a3 = st.columns(3)
