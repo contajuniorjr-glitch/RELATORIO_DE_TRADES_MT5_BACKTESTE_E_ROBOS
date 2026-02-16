@@ -1147,6 +1147,16 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             padding: 0.60rem 0.72rem;
             box-shadow: 0 8px 20px rgba(2, 6, 23, 0.28);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        div[data-testid="stMetric"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.66);
+            box-shadow:
+                0 0 12px rgba(0, 212, 255, 0.30),
+                0 0 30px rgba(0, 212, 255, 0.16),
+                0 12px 24px rgba(2, 6, 23, 0.38);
         }
 
         div[data-testid="stMetricLabel"] > div {
@@ -1189,6 +1199,16 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             background: linear-gradient(180deg, rgba(11, 18, 32, 0.50), rgba(11, 18, 32, 0.34));
             overflow: hidden;
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        [data-testid="stExpander"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.58);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.24),
+                0 0 24px rgba(0, 212, 255, 0.12),
+                0 10px 18px rgba(2, 6, 23, 0.34);
         }
 
         [data-testid="stDataFrame"] {
@@ -1196,11 +1216,62 @@ def _inject_dashboard_styles() -> None:
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 7px 16px rgba(2, 6, 23, 0.24);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        [data-testid="stDataFrame"]:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.56);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.22),
+                0 0 24px rgba(0, 212, 255, 0.11),
+                0 10px 18px rgba(2, 6, 23, 0.32);
         }
 
         .stAlert {
             border-radius: 12px;
             border: 1px solid rgba(148, 163, 184, 0.30);
+            transition: transform 0.22s ease, box-shadow 0.26s ease, border-color 0.26s ease;
+        }
+
+        .stAlert:hover {
+            transform: translateY(-2px);
+            border-color: rgba(130, 240, 255, 0.60);
+            box-shadow:
+                0 0 10px rgba(0, 212, 255, 0.24),
+                0 0 24px rgba(0, 212, 255, 0.12),
+                0 10px 18px rgba(2, 6, 23, 0.32);
+        }
+
+        .jt-report-card {
+            position: relative;
+            transition: transform 0.24s ease, box-shadow 0.28s ease, filter 0.28s ease;
+        }
+
+        .jt-report-card:hover {
+            transform: translateY(-2px);
+            filter: saturate(1.08);
+            box-shadow:
+                0 0 12px rgba(0, 212, 255, 0.34),
+                0 0 30px rgba(0, 212, 255, 0.18),
+                0 12px 24px rgba(2, 6, 23, 0.36) !important;
+        }
+
+        .jt-report-card::after {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 12px;
+            pointer-events: none;
+            border: 1px solid rgba(130, 240, 255, 0.0);
+            transition: border-color 0.28s ease, box-shadow 0.28s ease;
+        }
+
+        .jt-report-card:hover::after {
+            border-color: rgba(130, 240, 255, 0.56);
+            box-shadow:
+                0 0 8px rgba(130, 240, 255, 0.34),
+                inset 0 0 12px rgba(0, 212, 255, 0.10);
         }
 
         :is(
@@ -2355,7 +2426,7 @@ def _render_pillar_chip(title: str, score: float, detail: str) -> None:
     score_10 = _safe_num(score) / 10.0
     st.markdown(
         f"""
-        <div style="border:1px solid rgba(148,163,184,0.28); border-left:4px solid {color};
+        <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.28); border-left:4px solid {color};
                     border-radius:12px; padding:11px 12px;
                     background:linear-gradient(180deg, rgba(15,23,42,0.70), rgba(15,23,42,0.46));
                     box-shadow:0 6px 18px rgba(2,6,23,0.22); min-height:122px;">
@@ -2521,7 +2592,7 @@ with r5:
 
 st.markdown(
     f"""
-    <div style="border:1px solid rgba(148,163,184,0.30); border-radius:12px; padding:10px 12px;
+    <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.30); border-radius:12px; padding:10px 12px;
                 background:linear-gradient(180deg, rgba(15,23,42,0.72), rgba(15,23,42,0.48));">
         <div style="font-size:0.80rem; color:#A7B7D1; letter-spacing:0.03em;">LEITURA RÁPIDA DE MESA</div>
         <div style="font-size:0.95rem; color:#E2E8F0; margin-top:4px;">
@@ -2555,7 +2626,7 @@ with tab_diag:
     )
     st.markdown(
         f"""
-        <div style="border:1px solid rgba(148,163,184,0.30); border-left:5px solid {comp_color};
+        <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.30); border-left:5px solid {comp_color};
                     border-radius:12px; padding:10px 12px; background:rgba(15,23,42,0.55);">
             <div style="font-size:0.78rem; color:#A7B7D1; letter-spacing:0.03em;">DECISÃO DE COMPENSAÇÃO</div>
             <div style="font-size:1.25rem; font-weight:700; color:{comp_color};">{comp_status}</div>
