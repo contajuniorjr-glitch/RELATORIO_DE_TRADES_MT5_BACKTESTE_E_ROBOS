@@ -346,6 +346,42 @@ def _max_underwater_run(equity_values, baseline=0.0):
             best = max(best, cur)
     return int(best)
 
+def _water_phase_stats(equity_values, baseline=0.0):
+    peak = float(baseline)
+    cur_under = 0
+    cur_over = 0
+    max_under = 0
+    max_over = 0
+    total_under = 0
+    total_over = 0
+    valid_points = 0
+    for raw_v in equity_values:
+        try:
+            v = float(raw_v)
+        except Exception:
+            continue
+        if not np.isfinite(v):
+            continue
+        valid_points += 1
+        if v >= peak:
+            peak = v
+            cur_over += 1
+            total_over += 1
+            max_over = max(max_over, cur_over)
+            cur_under = 0
+        else:
+            cur_under += 1
+            total_under += 1
+            max_under = max(max_under, cur_under)
+            cur_over = 0
+    return {
+        "max_under": int(max_under),
+        "max_over": int(max_over),
+        "total_under": int(total_under),
+        "total_over": int(total_over),
+        "valid_points": int(valid_points),
+    }
+
 def _longest_run(signs, want=1):
     best = 0; cur = 0
     for s in signs:
@@ -488,6 +524,20 @@ def compute_stats(sim_df):
     eq = dff["equity"].astype(float).values if "equity" in dff.columns else np.array([])
     if eq.size: max_dd_r, max_dd_pct, dd_len = _drawdown_stats_from_equity(eq)
     else: max_dd_r, max_dd_pct, dd_len = np.nan, np.nan, np.nan
+    total_underwater_trades = 0
+    total_overwater_trades = 0
+    pct_underwater_trades = 0.0
+    pct_overwater_trades = 0.0
+    over_more_than_under_trades = False
+    if eq.size:
+        trade_water_stats = _water_phase_stats(eq, baseline=0.0)
+        total_underwater_trades = int(trade_water_stats["total_under"])
+        total_overwater_trades = int(trade_water_stats["total_over"])
+        valid_trades = int(trade_water_stats["valid_points"])
+        if valid_trades > 0:
+            pct_underwater_trades = float(total_underwater_trades / valid_trades)
+            pct_overwater_trades = float(total_overwater_trades / valid_trades)
+            over_more_than_under_trades = bool(total_overwater_trades > total_underwater_trades)
 
     # sequências por trade
     best_trade = float(np.max(pnl)) if pnl.size else np.nan
@@ -500,6 +550,12 @@ def compute_stats(sim_df):
     media_mensal = 0.0; total_meses = 0; pct_meses_pos = 0.0
     max_pos_month_streak = 0; max_neg_month_streak = 0
     max_underwater_months = 0
+    max_overwater_months = 0
+    total_underwater_months = 0
+    total_overwater_months = 0
+    pct_underwater_months = 0.0
+    pct_overwater_months = 0.0
+    over_more_than_under = False
     trades_por_mes = 0.0
     bym = pd.DataFrame(columns=["year_month", "pnl_used"])
     if "sort_time" in dff.columns and dff["sort_time"].notna().any():
@@ -517,7 +573,16 @@ def compute_stats(sim_df):
             trades_por_m = m.groupby("year_month", as_index=False)["pnl_used"].count()
             trades_por_mes = float(trades_por_m["pnl_used"].mean()) if not trades_por_m.empty else 0.0
             monthly_equity = bym["pnl_used"].astype(float).cumsum()
-            max_underwater_months = _max_underwater_run(monthly_equity.values, baseline=0.0)
+            water_stats = _water_phase_stats(monthly_equity.values, baseline=0.0)
+            max_underwater_months = int(water_stats["max_under"])
+            max_overwater_months = int(water_stats["max_over"])
+            total_underwater_months = int(water_stats["total_under"])
+            total_overwater_months = int(water_stats["total_over"])
+            valid_meses = int(water_stats["valid_points"])
+            if valid_meses > 0:
+                pct_underwater_months = float(total_underwater_months / valid_meses)
+                pct_overwater_months = float(total_overwater_months / valid_meses)
+                over_more_than_under = bool(total_overwater_months > total_underwater_months)
 
     media_mes_positivo = float(bym["pnl_used"][bym["pnl_used"]>0].mean()) if total_meses > 0 and (bym["pnl_used"]>0).any() else 0.0
     media_mes_negativo = float(bym["pnl_used"][bym["pnl_used"]<0].mean()) if total_meses > 0 and (bym["pnl_used"]<0).any() else 0.0
@@ -544,6 +609,17 @@ def compute_stats(sim_df):
         max_pos_month_streak=int(max_pos_month_streak),
         max_neg_month_streak=int(max_neg_month_streak),
         max_underwater_months=int(max_underwater_months),
+        max_overwater_months=int(max_overwater_months),
+        total_underwater_months=int(total_underwater_months),
+        total_overwater_months=int(total_overwater_months),
+        pct_underwater_months=float(pct_underwater_months),
+        pct_overwater_months=float(pct_overwater_months),
+        over_more_than_under=bool(over_more_than_under),
+        total_underwater_trades=int(total_underwater_trades),
+        total_overwater_trades=int(total_overwater_trades),
+        pct_underwater_trades=float(pct_underwater_trades),
+        pct_overwater_trades=float(pct_overwater_trades),
+        over_more_than_under_trades=bool(over_more_than_under_trades),
         trades_med_por_mes=float(trades_por_mes),
         media_mes_positivo=media_mes_positivo,
         media_mes_negativo=media_mes_negativo
@@ -2762,6 +2838,13 @@ dd_pct_abs = abs(_safe_num(stats.get("max_drawdown_pct", 0.0)))
 loss_streak = _safe_num(stats.get("max_consecutive_losses", 0.0))
 max_neg_month_streak = _safe_num(stats.get("max_neg_month_streak", 0.0))
 underwater_months = _safe_num(stats.get("max_underwater_months", 0.0))
+overwater_months = _safe_num(stats.get("max_overwater_months", 0.0))
+pct_underwater_months = _safe_num(stats.get("pct_underwater_months", 0.0))
+pct_overwater_months = _safe_num(stats.get("pct_overwater_months", 0.0))
+total_underwater_trades = int(_safe_num(stats.get("total_underwater_trades", 0.0)))
+total_overwater_trades = int(_safe_num(stats.get("total_overwater_trades", 0.0)))
+pct_underwater_trades = _safe_num(stats.get("pct_underwater_trades", 0.0))
+pct_overwater_trades = _safe_num(stats.get("pct_overwater_trades", 0.0))
 pnl_abs = abs(_safe_num(stats.get("pnl_sum", 0.0)))
 cost_ratio = (total_costs / pnl_abs) if pnl_abs > 0 else 1.0
 
@@ -3035,11 +3118,42 @@ with tab_risk:
             help="Maior tempo em meses que a curva ficou abaixo do último topo."
         )
         st.metric(
-            "Duração do pior DD (trades)",
-            f"{int(stats.get('dd_len', 0))}",
-            help="Quantidade de trades do último topo até o fundo do pior drawdown (sem recuperação)."
+            "Maior período Overwater (meses)",
+            f"{int(overwater_months)}",
+            help="Maior tempo em meses em novo topo/platô, sem ficar abaixo do topo anterior."
         )
-    st.caption("Leitura profissional: risco saudável mantém drawdown controlado e evita longos períodos abaixo do topo da curva.")
+    fase_saude = pct(pct_overwater_months)
+    fase_queda = pct(pct_underwater_months)
+    regime_gap = pct_overwater_months - pct_underwater_months
+    if regime_gap > 0.05:
+        fase_msg = "A curva de capital passa mais tempo em topo/força do que em recuperação."
+        fase_label = "Saudável"
+        fase_color = "#22C55E"
+    elif regime_gap < -0.05:
+        fase_msg = "A curva de capital passa mais tempo em recuperação do que em topo."
+        fase_label = "Doente"
+        fase_color = "#EF4444"
+    else:
+        fase_msg = "A curva de capital alterna entre força e recuperação em ritmo parecido."
+        fase_label = "Regular"
+        fase_color = "#F59E0B"
+    st.markdown(
+        f"""
+        <div class="jt-report-card" style="border:1px solid rgba(148,163,184,0.30); border-left:5px solid {fase_color};
+                    border-radius:12px; padding:10px 12px; background:rgba(15,23,42,0.55); margin-top:6px;">
+            <div style="font-size:0.78rem; color:#A7B7D1; letter-spacing:0.03em;">SAÚDE DA CURVA DE CAPITAL</div>
+            <div style="font-size:1.05rem; font-weight:700; color:{fase_color};">{fase_label}</div>
+            <div style="font-size:0.86rem; color:#E2ECFB; margin-top:4px;">
+                Tempo no período: <b>{fase_saude}</b> saudável vs <b>{fase_queda}</b> em queda ({fase_msg})
+            </div>
+            <div style="font-size:0.83rem; color:#C4D3E8; margin-top:3px;">
+                Trades: <b>{total_overwater_trades}</b> ({pct(pct_overwater_trades)}) saudáveis vs
+                <b>{total_underwater_trades}</b> ({pct(pct_underwater_trades)}) em queda.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 with tab_eff:
     e1, e2, e3 = st.columns(3)
