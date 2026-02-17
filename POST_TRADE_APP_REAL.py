@@ -327,6 +327,25 @@ def _drawdown_stats_from_equity(eq_values):
             cur_len = 0
     return float(max_dd_r), float(max_dd_pct), int(dd_len)
 
+def _max_underwater_run(equity_values, baseline=0.0):
+    peak = float(baseline)
+    best = 0
+    cur = 0
+    for raw_v in equity_values:
+        try:
+            v = float(raw_v)
+        except Exception:
+            continue
+        if not np.isfinite(v):
+            continue
+        if v >= peak:
+            peak = v
+            cur = 0
+        else:
+            cur += 1
+            best = max(best, cur)
+    return int(best)
+
 def _longest_run(signs, want=1):
     best = 0; cur = 0
     for s in signs:
@@ -480,7 +499,9 @@ def compute_stats(sim_df):
     # por mês (usar sort_time NAIVE)
     media_mensal = 0.0; total_meses = 0; pct_meses_pos = 0.0
     max_pos_month_streak = 0; max_neg_month_streak = 0
+    max_underwater_months = 0
     trades_por_mes = 0.0
+    bym = pd.DataFrame(columns=["year_month", "pnl_used"])
     if "sort_time" in dff.columns and dff["sort_time"].notna().any():
         m = dff.copy()
         st_naive = _to_naive_series(m["sort_time"])
@@ -495,6 +516,8 @@ def compute_stats(sim_df):
             max_neg_month_streak = _longest_run(month_signs, -1)
             trades_por_m = m.groupby("year_month", as_index=False)["pnl_used"].count()
             trades_por_mes = float(trades_por_m["pnl_used"].mean()) if not trades_por_m.empty else 0.0
+            monthly_equity = bym["pnl_used"].astype(float).cumsum()
+            max_underwater_months = _max_underwater_run(monthly_equity.values, baseline=0.0)
 
     media_mes_positivo = float(bym["pnl_used"][bym["pnl_used"]>0].mean()) if total_meses > 0 and (bym["pnl_used"]>0).any() else 0.0
     media_mes_negativo = float(bym["pnl_used"][bym["pnl_used"]<0].mean()) if total_meses > 0 and (bym["pnl_used"]<0).any() else 0.0
@@ -520,6 +543,7 @@ def compute_stats(sim_df):
         pct_meses_positivos=float(pct_meses_pos),
         max_pos_month_streak=int(max_pos_month_streak),
         max_neg_month_streak=int(max_neg_month_streak),
+        max_underwater_months=int(max_underwater_months),
         trades_med_por_mes=float(trades_por_mes),
         media_mes_positivo=media_mes_positivo,
         media_mes_negativo=media_mes_negativo
@@ -2574,11 +2598,21 @@ def _qual_band_compensated(base_label: str, compensated: bool) -> str:
         return "Compensado"
     return base_label
 
-def _pillar_reason_map(win_rate_v: float, payoff_v: float, dd_pct_v: float, cost_ratio_v: float, expect_v: float) -> dict[str, str]:
+def _pillar_reason_map(
+    win_rate_v: float,
+    payoff_v: float,
+    dd_pct_v: float,
+    cost_ratio_v: float,
+    expect_v: float,
+    underwater_months_v: float,
+) -> dict[str, str]:
     return {
         "Consistência": f"Win Rate {pct(win_rate_v)} e meses positivos {pct(pct_meses_pos)}.",
         "Eficiência": f"Payoff {payoff_v:.2f} e expectativa {br_money(expect_v)} por trade.",
-        "Risco": f"Drawdown máximo {pct(dd_pct_v)} e sequência de perdas {int(_safe_num(stats.get('max_consecutive_losses', 0)))}.",
+        "Risco": (
+            f"Drawdown máximo {pct(dd_pct_v)}, sequência de perdas {int(_safe_num(stats.get('max_consecutive_losses', 0)))} "
+            f"e {int(_safe_num(underwater_months_v))} meses abaixo do topo."
+        ),
         "Custos": f"Custos equivalem a {cost_ratio_v:.2%} do |P&L| e {br_money(custos_por_trade)} por trade.",
     }
 
@@ -2590,6 +2624,8 @@ def _compensation_diagnosis(
     dd_pct_v: float,
     cost_ratio_v: float,
     pct_meses_pos_v: float,
+    max_neg_month_streak_v: float,
+    max_underwater_months_v: float,
 ) -> tuple[str, str, list[str], list[str]]:
     reasons: list[str] = []
     alerts: list[str] = []
@@ -2601,6 +2637,10 @@ def _compensation_diagnosis(
     risk_critical = dd_pct_v > 0.20
     costs_heavy = cost_ratio_v > 0.25
     costs_critical = cost_ratio_v > 0.40
+    neg_months_stretched = max_neg_month_streak_v >= 9
+    neg_months_critical = max_neg_month_streak_v >= 18
+    underwater_stretched = max_underwater_months_v >= 12
+    underwater_critical = max_underwater_months_v >= 24
 
     if low_hitrate_compensated:
         reasons.append("Taxa de acerto baixa está sendo compensada por payoff alto com expectativa positiva.")
@@ -2617,6 +2657,16 @@ def _compensation_diagnosis(
     elif risk_stretched:
         alerts.append("Risco esticado (drawdown alto) sem compensação robusta de consistência.")
 
+    if underwater_stretched and high_quality_edge and not underwater_critical:
+        reasons.append("Tempo prolongado em drawdown está parcialmente compensado por edge líquido e recuperação final.")
+    elif underwater_stretched:
+        alerts.append("A curva ficou muito tempo abaixo do topo, aumentando pressão psicológica e risco de abandono.")
+
+    if neg_months_stretched and high_quality_edge and not neg_months_critical:
+        reasons.append("Sequência longa de meses negativos foi parcialmente compensada por payoff/expectativa.")
+    elif neg_months_stretched:
+        alerts.append("Sequência extensa de meses negativos reduz robustez operacional.")
+
     if pnl_sum_v <= 0 or expectancy_v <= 0:
         status = "Não compensa"
         color = "#EF4444"
@@ -2626,6 +2676,19 @@ def _compensation_diagnosis(
             alerts.append("Expectativa por trade está nula/negativa.")
         return status, color, reasons, alerts
 
+    if underwater_critical or neg_months_critical:
+        status = "Não compensa"
+        color = "#EF4444"
+        if underwater_critical:
+            alerts.append(
+                f"A estratégia passou {int(_safe_num(max_underwater_months_v))} meses abaixo do topo da curva."
+            )
+        if neg_months_critical:
+            alerts.append(
+                f"Houve {int(_safe_num(max_neg_month_streak_v))} meses negativos consecutivos."
+            )
+        return status, color, reasons, alerts
+
     if (risk_critical and not high_quality_edge) or (costs_critical and payoff_v < 2.0):
         status = "Não compensa"
         color = "#EF4444"
@@ -2633,6 +2696,11 @@ def _compensation_diagnosis(
             alerts.append("Drawdown crítico para o nível de retorno entregue.")
         if costs_critical:
             alerts.append("Custos muito altos em proporção ao P&L.")
+        return status, color, reasons, alerts
+
+    if underwater_stretched or neg_months_stretched:
+        status = "Compensa com ressalvas"
+        color = "#F59E0B"
         return status, color, reasons, alerts
 
     if (risk_stretched or costs_heavy) and not high_quality_edge:
@@ -2692,6 +2760,8 @@ payoff = _safe_num(stats.get("payoff", 0.0))
 expectancy = _safe_num(stats.get("expectancy", 0.0))
 dd_pct_abs = abs(_safe_num(stats.get("max_drawdown_pct", 0.0)))
 loss_streak = _safe_num(stats.get("max_consecutive_losses", 0.0))
+max_neg_month_streak = _safe_num(stats.get("max_neg_month_streak", 0.0))
+underwater_months = _safe_num(stats.get("max_underwater_months", 0.0))
 pnl_abs = abs(_safe_num(stats.get("pnl_sum", 0.0)))
 cost_ratio = (total_costs / pnl_abs) if pnl_abs > 0 else 1.0
 
@@ -2712,6 +2782,7 @@ edge_score = _sigmoid01(edge_ratio, center=0.20, scale=0.20)
 dd_ok_score = 1.0 - _sigmoid01(dd_pct_abs, center=0.12, scale=0.04)
 loss_ok_score = 1.0 - _sigmoid01(loss_streak, center=6.0, scale=2.5)
 dd_len_ok_score = 1.0 - _sigmoid01(dd_len, center=20.0, scale=8.0)
+underwater_ok_score = 1.0 - _sigmoid01(underwater_months, center=8.0, scale=3.0)
 cost_ok_score = 1.0 - _sigmoid01(cost_ratio, center=0.18, scale=0.08)
 friction_ratio = (custos_por_trade / expectancy) if expectancy > 0 else 1.0
 friction_ok_score = 1.0 - _sigmoid01(friction_ratio, center=0.35, scale=0.18)
@@ -2744,9 +2815,10 @@ efficiency_raw = 100.0 * (
     + 0.20 * _clip01(cadence_score)
 )
 risk_raw = 100.0 * (
-    0.50 * _clip01(dd_ok_score)
-    + 0.30 * _clip01(loss_ok_score)
-    + 0.20 * _clip01(dd_len_ok_score)
+    0.40 * _clip01(dd_ok_score)
+    + 0.25 * _clip01(loss_ok_score)
+    + 0.15 * _clip01(dd_len_ok_score)
+    + 0.20 * _clip01(underwater_ok_score)
 )
 cost_raw = 100.0 * (
     0.60 * _clip01(cost_ok_score)
@@ -2767,7 +2839,7 @@ pillars = {
 }
 strongest = max(pillars, key=pillars.get)
 bottleneck = min(pillars, key=pillars.get)
-pillar_reasons = _pillar_reason_map(win_rate, payoff, dd_pct_abs, cost_ratio, expectancy)
+pillar_reasons = _pillar_reason_map(win_rate, payoff, dd_pct_abs, cost_ratio, expectancy, underwater_months)
 priority_map = {
     "Consistência": "Prioridade: estabilizar frequência/qualidade de setups para elevar previsibilidade mensal.",
     "Eficiência": "Prioridade: melhorar payoff e expectativa por trade (ajuste de alvos/stops e filtro de entradas).",
@@ -2782,6 +2854,8 @@ comp_status, comp_color, comp_reasons, comp_alerts = _compensation_diagnosis(
     dd_pct_v=dd_pct_abs,
     cost_ratio_v=cost_ratio,
     pct_meses_pos_v=pct_meses_pos,
+    max_neg_month_streak_v=max_neg_month_streak,
+    max_underwater_months_v=underwater_months,
 )
 comp_why = _compensation_explanation(comp_status, comp_reasons, comp_alerts)
 
@@ -2792,7 +2866,13 @@ qual_cost_base = _qual_band(cost_ratio, 0.12, 0.25, reverse=True)
 
 entry_compensated = qual_entry_base == "Atenção" and win_rate >= 0.58 and expectancy > 0
 stability_compensated = qual_stability_base == "Atenção" and payoff >= 2.0 and expectancy > 0
-risk_compensated = qual_risk_base == "Atenção" and payoff >= 2.0 and expectancy > 0 and pct_meses_pos >= 0.55
+risk_compensated = (
+    qual_risk_base == "Atenção"
+    and payoff >= 2.0
+    and expectancy > 0
+    and pct_meses_pos >= 0.55
+    and underwater_months <= 12
+)
 cost_compensated = qual_cost_base == "Atenção" and payoff >= 1.35 and expectancy > 0 and cost_ratio <= 0.40
 
 qual_entry = _qual_band_compensated(qual_entry_base, entry_compensated)
@@ -2853,7 +2933,11 @@ with p1:
 with p2:
     _render_pillar_chip("⚙️ Eficiência", efficiency_score, f"Expectativa por trade: {br_money(expectancy)} | Trades por mês: {stats['trades_med_por_mes']:.2f}")
 with p3:
-    _render_pillar_chip("🛡️ Risco", risk_score, f"Drawdown máximo: {pct(stats['max_drawdown_pct'])} | Sequência de perdas: {stats['max_consecutive_losses']}")
+    _render_pillar_chip(
+        "🛡️ Risco",
+        risk_score,
+        f"Drawdown máximo: {pct(stats['max_drawdown_pct'])} | Underwater: {int(underwater_months)} meses",
+    )
 with p4:
     _render_pillar_chip("💸 Custos", cost_score, f"Custo por trade: {br_money(custos_por_trade)} | Custo mensal: {br_money(custos_por_mes)}")
 
@@ -2876,7 +2960,7 @@ with tab_diag:
                 <b>Por quê:</b> {comp_why}
             </div>
             <div style="font-size:0.80rem; color:#C4D3E8; margin-top:3px;">
-                O diagnóstico considera compensações entre acerto, payoff, expectativa, drawdown e custos.
+                O diagnóstico considera compensações entre acerto, payoff, expectativa, drawdown, tempo de recuperação e custos.
             </div>
         </div>
         """,
@@ -2903,7 +2987,7 @@ with tab_diag:
             st.markdown(
                 f"- Qualidade de entrada/saída: **{qual_entry}**{quality_suffix} (Payoff {payoff:.2f}).\n"
                 f"- Estabilidade de resultado: **{qual_stability}**{stability_suffix} (Win Rate {pct(win_rate)}).\n"
-                f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)}).\n"
+                f"- Pressão de risco: **{qual_risk}**{risk_suffix} (DD {pct(dd_pct_abs)} | Underwater {int(underwater_months)} meses).\n"
                 f"- Eficiência de custos: **{qual_cost}**{cost_suffix} (Custos/|P&L| {cost_ratio:.2%})."
             )
         with diag_col2:
@@ -2912,6 +2996,7 @@ with tab_diag:
                 "- Win Rate: Excelente >= 58% | Bom >= 47%\n"
                 "- Payoff: Excelente >= 2.00 | Bom >= 1.40\n"
                 "- Drawdown %: Excelente <= 8% | Bom <= 14%\n"
+                "- Underwater (meses): Bom < 12 | Crítico >= 24\n"
                 "- Custos/|P&L|: Excelente <= 12% | Bom <= 25%"
             )
 
@@ -2929,17 +3014,32 @@ with tab_ret:
     st.caption("Leitura profissional: retorno robusto combina expectativa positiva, payoff saudável e média mensal estável.")
 
 with tab_risk:
-    b1, b2, b3 = st.columns(3)
+    b1, b2, b3, b4 = st.columns(4)
     with b1:
         st.metric("Máx. DD (R$)", br_money(stats["max_drawdown"]))
-        st.metric("Máx. DD (%)", pct(stats["max_drawdown_pct"]))
+        st.metric(
+            "Máx. DD (%)",
+            pct(stats["max_drawdown_pct"]),
+            help="Queda máxima da curva desde um topo até o fundo."
+        )
     with b2:
         st.metric("% Tempo no Mercado", pct(pct_time_mkt))
         st.metric("Dias Médios em Operação", format_days_hours(stats["avg_holding_days"]))
     with b3:
         st.metric("Maior sequência de Losses", f"{stats['max_consecutive_losses']}")
         st.metric("Maior sequência de Meses Negativos", f"{stats['max_neg_month_streak']}")
-    st.caption("Leitura profissional: risco saudável mantém drawdown controlado e evita concentração excessiva de perdas sequenciais.")
+    with b4:
+        st.metric(
+            "Maior período Underwater (meses)",
+            f"{int(underwater_months)}",
+            help="Maior tempo em meses que a curva ficou abaixo do último topo."
+        )
+        st.metric(
+            "Duração do pior DD (trades)",
+            f"{int(stats.get('dd_len', 0))}",
+            help="Quantidade de trades do último topo até o fundo do pior drawdown (sem recuperação)."
+        )
+    st.caption("Leitura profissional: risco saudável mantém drawdown controlado e evita longos períodos abaixo do topo da curva.")
 
 with tab_eff:
     e1, e2, e3 = st.columns(3)
@@ -2975,7 +3075,7 @@ with st.expander("📘 Como interpretar o Cockpit Quant (método e fórmulas)"):
     st.markdown(
         "- **Consistência**: combina Win Rate e percentual de meses positivos.\n"
         "- **Eficiência**: combina Payoff, Expectativa por trade e produtividade (trades/mês).\n"
-        "- **Risco**: penaliza drawdown percentual alto e sequências longas de perdas.\n"
+        "- **Risco**: penaliza drawdown percentual alto, sequências longas de perdas e longos períodos underwater.\n"
         "- **Custos**: penaliza custo/trade alto e custo desproporcional ao P&L."
     )
     ref_df = pd.DataFrame(
